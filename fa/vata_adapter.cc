@@ -64,14 +64,14 @@ VATAAdapter* VATAAdapter::allocateTAWithSameFinalStates(
 VATAAdapter::iterator VATAAdapter::begin() const
 {
     //FA_DEBUG_AT(1,"TA begin\n");
-    assert(equal(this->vataAut_, this->orig_));
+    //assert(equal(this->vataAut_, this->orig_));
     return vataAut_.begin();
 }
 
 VATAAdapter::iterator VATAAdapter::end() const
 {
     //FA_DEBUG_AT(1,"TA end\n");
-    assert(equal(this->vataAut_, this->orig_));
+    //assert(equal(this->vataAut_, this->orig_));
 	return vataAut_.end();
 }
 
@@ -220,7 +220,7 @@ bool VATAAdapter::isFinalState(size_t state) const
 const std::unordered_set<size_t>& VATAAdapter::getFinalStates() const
 {
     FA_DEBUG_AT(1,"TA get final states\n");
-    assert(equal(this->vataAut_, this->orig_));
+    //assert(equal(this->vataAut_, this->orig_));
     return vataAut_.GetFinalStates();
 }
 
@@ -230,7 +230,7 @@ size_t VATAAdapter::getFinalState() const
 
 	const std::unordered_set<size_t>& finalStates = this->getFinalStates();
 	assert(1 == finalStates.size());
-    assert(equal(this->vataAut_, this->orig_));
+    //assert(equal(this->vataAut_, this->orig_));
     return *finalStates.begin();
 }
 
