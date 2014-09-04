@@ -24,6 +24,7 @@
 #include "vata_abstraction.hh"
 #include "label.hh"
 #include "streams.hh"
+#include "treeaut.hh"
 
 // VATA headers
 #include "libvata/include/vata/explicit_tree_aut.hh"
@@ -84,6 +85,9 @@ private: // private constants
 private: // data members
     TreeAut vataAut_;
 
+public:
+    TA orig_;
+
 private: // private methods
 	VATAAdapter(TreeAut aut);
 
@@ -141,7 +145,7 @@ public: // public methods
      */
     static VATAAdapter* allocateTAWithSameFinalStates(
 		const VATAAdapter&         ta,
-        bool                 copyFinalStates=true);
+        bool                       copyFinalStates=true);
 
     /**
      * @brief Returns iterator over transitions
@@ -385,6 +389,7 @@ public: // public methods
 	VATAAdapter& unfoldAtRoot(
 		VATAAdapter&                                  dst,
 		const std::unordered_map<size_t, size_t>&     states,
+		const std::unordered_map<size_t, size_t>&     statesHelp,
 		bool                                          registerFinalState = true) const;
 
 	void buildStateIndex(Index<size_t>& index) const;
@@ -423,6 +428,9 @@ public: // public methods
                     funcRename(trans.GetParent()));
         }
 
+        TA::rename(dst.orig_, src.orig_, funcRename, addFinalStates);
+        assert(equal(dst.vataAut_, dst.orig_));
+        assert(equal(src.vataAut_, src.orig_));
         return dst;
     }
 
@@ -443,6 +451,9 @@ public: // public methods
 		VATAAdapter&                             dst,
 		const std::vector<std::vector<bool>>&    rel,
 		const Index<size_t>&                     stateIndex) const;
+
+    const TA& getOrig() { return orig_;} // TODO remove
+    static bool equal(const TreeAut& vata, const TA& orig);
 
     friend std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta);
 };

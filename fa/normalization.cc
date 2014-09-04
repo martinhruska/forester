@@ -43,11 +43,17 @@ TreeAut* Normalization::mergeRoot(
 
 	size_t refState = _MSB_ADD(this->fae.boxMan->getDataId(Data::createRef(ref)));
 	std::unordered_map<size_t, size_t> joinStatesMap;
+	std::unordered_map<size_t, size_t> joinStatesMapHelp; // TODO remove just for vata debug
 
 	for (size_t finState : src.getFinalStates())
 	{
 		joinStates.push_back(this->fae.nextState());
 		joinStatesMap.insert(std::make_pair(finState, this->fae.freshState()));
+	}
+
+	for (size_t finState : src.getOrig().getFinalStates())
+	{
+		joinStatesMapHelp.insert(std::make_pair(finState, this->fae.freshState()));
 	}
 
 	bool hit = false;
@@ -68,7 +74,7 @@ TreeAut* Normalization::mergeRoot(
 	}
 	if (!hit) {assert(false);}
 	// avoid screwing up things
-	src.unfoldAtRoot(*ta, joinStatesMap, false);
+	src.unfoldAtRoot(*ta, joinStatesMap, joinStatesMapHelp, false);
 	return ta;
 }
 
