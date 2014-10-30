@@ -1,4 +1,0 @@
-
-configure 32bit?
-more tests from glib/tests
-

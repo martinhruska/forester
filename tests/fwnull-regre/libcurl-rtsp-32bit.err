@@ -1,2 +1,0 @@
-rtsp.c:712:7: warning: comparing pointer with NULL
-rtsp.c:709:11: note: the pointer was already dereferenced here
