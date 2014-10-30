@@ -10,6 +10,7 @@ import resource
 TRACE_PARAM = 'trace'
 FILE_PARAM = 'file'
 PROPERS_PARAM = 'properties'
+FALSE_PARAM = 'false'
 
 PROP_SUFFIX = '.prp'
 ALL_PRP = 'ALL'+PROP_SUFFIX
@@ -47,6 +48,9 @@ def parseParams(params):
 
     parser.add_argument('--'+PROPERS_PARAM, type=str,
                        help='Path to a file with properties to be verified. Default is defined by the rules of the competition')
+    
+    parser.add_argument('--'+FALSE_PARAM, action='store_true',
+                       help='Print FALSE when a bug found')
 
     return vars(parser.parse_args(params))
 
@@ -113,15 +117,12 @@ def execute(args):
         else:
             res=1
             if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
-                #print "FALSE"
-                print "UNKNOWN"
+                print "FALSE" if args[FALSE_PARAM] else "UNKNOWN"
             else:
                 if VALID_DEREF in getProperties(parseProps(formulas), lines):
-                    print "UNKNOWN"
-                    #print "FALSE("+VALID_DEREF+")"
+                    print "FALSE("+VALID_DEREF+")" if args[FALSE_PARAM] else "UNKNOWN"
                 else:
-                    print "UNKNOWN"
-                    #print "FALSE("+prop+")"
+                    print "FALSE("+prop+")" if args[FALSE_PARAM] else "UNKNOWN"
     print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
     return res
 
