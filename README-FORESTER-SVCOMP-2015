@@ -26,10 +26,6 @@ Instructions for SV-COMP'15
      - on Ubuntu/Debian provided by a package called 'gcc-X-multilib' 'gcc-X-plugin-dev'
 	   where X is version of gcc, e.g. gcc-4.6-multilib for gcc version 4.6.
 
-   * Flex and Bison
-     - Flex should be in version 2.5 or higher and Bison in version 2.7 or higher.
-	 - on Ubuntu/Debian provided by a package called 'flex' and 'bison'
-
    * Python 2.7
      - on Ubuntu/Debian provided by a package called 'python2.7'
 
