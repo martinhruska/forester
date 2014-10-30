@@ -5,7 +5,7 @@ Instructions for SV-COMP'15
 
    * GCC and G++
     - on Ubuntu/Debian provided by packages called 'g++' and 'gcc'.
-	  We tested our tool using 'gcc-4.6'
+	  We tested our tool using 'gcc-4.6' for compiling test cases.
 	  
    * CMake 2.8+
      - available at http://www.cmake.org

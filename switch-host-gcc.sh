@@ -81,6 +81,4 @@ build_analyzer() {
 }
 
 build_analyzer fwnull fwnull
-build_analyzer sl Predator
 build_analyzer fa Forester
-build_analyzer vra "Value-Range Analyzer"

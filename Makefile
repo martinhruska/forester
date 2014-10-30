@@ -21,7 +21,7 @@ BOOST_STABLE    ?= boost_1_46_1#            # released Boost
 BOOST_STABLE_TGZ?= $(BOOST_STABLE).tar.bz2# # tarball of released Boost
 BOOST_STABLE_URL?= http://sourceforge.net/projects/boost/files/boost/1.46.1/boost_1_46_1.tar.bz2/download
 
-GCC_STABLE      ?= gcc-4.9.1#               # released gcc
+GCC_STABLE      ?= gcc-4.6#                 # released gcc
 GCC_STABLE_TGZ  ?= $(GCC_STABLE).tar.bz2#   # tarball of released gcc
 GCC_STABLE_URL  ?= $(GCC_MIRROR)/$(GCC_STABLE)/$(GCC_STABLE_TGZ)
 
@@ -42,10 +42,10 @@ CURL            ?= curl --location -v#      # URL grabber command-line
 GIT             ?= git#                     # use this to override git(1)
 SVN             ?= svn#                     # use this to override svn(1)
 
-ANALYZERS       ?= fwnull sl fa vra
+ANALYZERS       ?= fwnull fa
 DIRS_BUILD      ?= cl $(ANALYZERS)
 
-.PHONY: all llvm check clean distcheck distclean api cl/api sl/api ChangeLog \
+.PHONY: all llvm check clean distcheck distclean api cl/api ChangeLog \
 	build_boost \
 	build_gcc build_gcc_svn update_gcc update_gcc_src_only \
 	$(DIRS_BUILD)
@@ -55,7 +55,6 @@ all: cl
 
 llvm:
 	$(MAKE) -C cl CMAKE="cmake -D ENABLE_LLVM=ON"
-	$(MAKE) -C sl CMAKE="cmake -D ENABLE_LLVM=ON"
 	$(MAKE) -C fa CMAKE="cmake -D ENABLE_LLVM=ON"
 
 $(DIRS_BUILD):
@@ -77,11 +76,7 @@ cl/api:
 	$(MAKE) -C cl/api clean
 	$(MAKE) -C cl/api
 
-sl/api:
-	$(MAKE) -C sl/api clean
-	$(MAKE) -C sl/api
-
-api: cl/api sl/api
+api: cl/api
 
 # unpack the release of Boost
 $(BOOST_STABLE): $(BOOST_STABLE_TGZ)
