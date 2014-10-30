@@ -1,0 +1,1 @@
+#define CL_GIT_SHA1 "bf6067afe80e618d55225df547a884abc80072ed"
