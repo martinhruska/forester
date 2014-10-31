@@ -43,7 +43,7 @@ Instructions for SV-COMP'15
 
 2) Use script 'fa_build/sv_comp_run.py' for run of a SV-COMP test-case.
 
-    Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--false] file
+    Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--false] [--time] file
        -h
 	      Print help 
        --trace TRACE
@@ -56,6 +56,8 @@ Instructions for SV-COMP'15
 		  the competition rules.
 	   --false
 		  Print FALSE when a bug found
+	   --time
+	      Print consumed CPU time
 	   file
 	      A path to a file with test case
 
