@@ -53,7 +53,7 @@ def parseParams(params):
     parser.add_argument('--'+FALSE_PARAM, action='store_true',
                        help='Print FALSE when a bug found')
     
-    parser.add_argument('--'+TIME_PARAM, action='store_true',
+    parser.add_argument('--'+TIME_PARAM, action='store_false',
                        help='Print consumed CPU time')
 
     return vars(parser.parse_args(params))
