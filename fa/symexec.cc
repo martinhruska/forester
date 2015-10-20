@@ -523,6 +523,10 @@ protected:
 			}
 			else
 			{
+				if (!compiler_.getNumberOfAllocations())
+				{
+					throw NotImplementedException("Program without memory allocation");
+				}
 				throw;
 			}
 		}

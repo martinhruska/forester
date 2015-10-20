@@ -242,7 +242,6 @@ public:
 		const CodeStorage::Storage&   stor,
 		const CodeStorage::Fnc&       entry);
 
-
 private:
 
 	/**
@@ -252,6 +251,10 @@ private:
 
 	/// The core of the compiler
 	Core *core_;
+
+public:
+	size_t getNumberOfAllocations();
+
 };
 
 #endif

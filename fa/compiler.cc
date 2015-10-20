@@ -377,6 +377,7 @@ public:
 		this->_table["free"]                    = builtin_e::biFree;
 		this->_table["abort"]                   = builtin_e::biAbort;
 		this->_table["___fa_get_nondet_int"]    = builtin_e::biNondet;
+		this->_table["__VERIFIER_nondet_int"]    = builtin_e::biNondet;
 		this->_table["___fa_error"]             = builtin_e::biError;
 		this->_table["__VERIFIER_plot"]         = builtin_e::biPlotHeap;
 		this->_table["___fa_fix"]               = builtin_e::biFix;
@@ -550,6 +551,9 @@ private:
 	BuiltinTable builtinTable_;
 	/// The loop analyser
 	LoopAnalyser loopAnalyser_;
+
+	/// Number of allocations in program
+	size_t allocationCount_;
 
 private:  // methods
 
@@ -2067,9 +2071,11 @@ protected:
 		{	// switch according to the name of the function
 			case builtin_e::biMalloc:
 				compileAllocation(insn, alloc_type_e::t_malloc);
+				++allocationCount_;
 				return;
 			case builtin_e::biAlloca:
 				compileAllocation(insn, alloc_type_e::t_alloca);
+				++allocationCount_;
 				return;
 			case builtin_e::biMemset:
 				throw NotImplementedException(
@@ -2236,6 +2242,109 @@ protected:
 		}
 	}
 
+	template <class F>
+	bool isCall(const CodeStorage::Insn* insn, F isCallChecker)
+	{
+		return isCallChecker(*insn);
+	}
+
+	/**
+	 * Returns true when there is an integer on a loop
+	 * which is not nondeterministic.
+	 * This can lead to measuring length of a list
+	 * by an integer variable.
+	 **/
+	bool checkIntCond(const CodeStorage::Block* block)
+	{
+		bool isNondetInt = false;
+		bool isCjmp = false;
+		bool isIntComp = false;
+		bool isZeroConstant = false;
+		bool isDeref = false;
+
+		auto fIsNondetIntCall = [this](const CodeStorage::Insn& insn) -> bool {
+			return insn.code == cl_insn_e::CL_INSN_CALL &&
+				builtin_e::biNondet ==
+				this->builtinTable_[insn.operands[1].data.cst.data.cst_fnc.name];
+		};
+
+		auto fIsCjmp = [](const CodeStorage::Insn& insn) -> bool {
+			return insn.code == cl_insn_e::CL_INSN_COND;
+		};
+
+		auto fIsDeref = [](const CodeStorage::Insn& insn) -> bool {
+			for (auto& operand : insn.operands)
+			{
+				if (operand.accessor != NULL
+					&& operand.code == cl_operand_e::CL_OPERAND_VAR
+					&& operand.accessor->code == CL_ACCESSOR_DEREF)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		auto fIsIntComp = [](const CodeStorage::Insn& insn) -> bool {
+			const bool isComparison = insn.code == cl_insn_e::CL_INSN_BINOP && (
+				insn.subCode == cl_binop_e::CL_BINOP_EQ ||
+				insn.subCode == cl_binop_e::CL_BINOP_NE ||
+				insn.subCode == cl_binop_e::CL_BINOP_LE ||
+				insn.subCode == cl_binop_e::CL_BINOP_GE ||
+				insn.subCode == cl_binop_e::CL_BINOP_LT ||
+				insn.subCode == cl_binop_e::CL_BINOP_GT);
+
+			if (!isComparison)
+			{
+				return false;
+			}
+
+			const cl_operand& src1 = insn.operands[1];
+			const cl_operand& src2 = insn.operands[2];
+
+			return src1.type->code == cl_type_e::CL_TYPE_INT &&
+				src2.type->code == cl_type_e::CL_TYPE_INT;
+		};
+
+		auto fIsZeroConstant = [this](const CodeStorage::Insn& insn) -> bool {
+			if (insn.code != cl_insn_e::CL_INSN_BINOP)
+			{
+				return false;
+			}
+
+			for (auto i : {1,2})
+			{
+				const cl_operand& op = insn.operands[i];
+				if ((op.code == cl_operand_e::CL_OPERAND_CST) &&
+					(op.type != nullptr))
+				{
+					this->isTypeImplemented(op.type->code);
+				}
+
+				if ((op.code == cl_operand_e::CL_OPERAND_CST) &&
+					(op.type != nullptr) &&
+					(op.type->code == cl_type_e::CL_TYPE_INT)
+					&& intCstFromOperand(&op) == 0)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		for (auto insn : *block)
+		{
+			isNondetInt = isNondetInt || isCall(insn, fIsNondetIntCall);
+			isCjmp = isCjmp || isCall(insn, fIsCjmp);
+			isIntComp = isIntComp || isCall(insn, fIsIntComp);
+			isZeroConstant = isZeroConstant || isCall(insn, fIsZeroConstant);
+			isDeref = isDeref || isCall(insn, fIsDeref);
+		}
+
+		return !isNondetInt && isCjmp && isIntComp && isZeroConstant && !isDeref;
+	}
 
 	/**
 	 * @brief  Compile a basic block of a control-flow graph
@@ -2253,6 +2362,18 @@ protected:
 		if (abstract || loopAnalyser_.isEntryPoint(*block->begin()))
 		{	// in case there should be abstraction at the start of the block
 			cAbstraction();
+		}
+
+		if (loopAnalyser_.isEntryPoint(*block->begin()))
+		{
+			// In case of an integer condition on a loop which is not
+			// a nondet integer and is not a dereference
+			// Basically we won't manage lists which length is
+			// measured by integer variable.
+			if (checkIntCond(block))
+			{
+				throw NotImplementedException("Integer on cycle condition");
+			}
 		}
 
 		for (auto insn : *block)
@@ -2589,8 +2710,14 @@ public:
 		ta_(ta),
 		boxMan_(boxMan),
 		builtinTable_{},
-		loopAnalyser_{}
+		loopAnalyser_{},
+		allocationCount_(0)
 	{ }
+
+	size_t getNumberOfAllocations()
+	{
+		return allocationCount_;
+	}
 
 
 	/**
@@ -2687,4 +2814,9 @@ void Compiler::compile(Compiler::Assembly& assembly,
 	const CodeStorage::Storage& stor, const CodeStorage::Fnc& entry)
 {
 	core_->compile(assembly, stor, entry);
+}
+
+size_t Compiler::getNumberOfAllocations()
+{
+	return core_->getNumberOfAllocations();
 }
