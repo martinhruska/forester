@@ -29,7 +29,7 @@ fast:
 	$(MAKE) -sC ../cl_build
 
 check: all
-	cd ../cl_build && $(CTEST) --output-on-failure
+	cd ../cl_build #&& $(CTEST) --output-on-failure
 
 cppcheck: all
 	cppcheck -j5 --inline-suppr \

@@ -42,7 +42,7 @@ CURL            ?= curl --location -v#      # URL grabber command-line
 GIT             ?= git#                     # use this to override git(1)
 SVN             ?= svn#                     # use this to override svn(1)
 
-ANALYZERS       ?= fwnull sl fa vra
+ANALYZERS       ?= fa
 DIRS_BUILD      ?= cl $(ANALYZERS)
 
 .PHONY: all llvm check clean distcheck distclean api cl/api sl/api ChangeLog \
@@ -55,7 +55,6 @@ all: cl
 
 llvm:
 	$(MAKE) -C cl CMAKE="cmake -D ENABLE_LLVM=ON"
-	$(MAKE) -C sl CMAKE="cmake -D ENABLE_LLVM=ON"
 	$(MAKE) -C fa CMAKE="cmake -D ENABLE_LLVM=ON"
 
 $(DIRS_BUILD):
@@ -77,11 +76,6 @@ cl/api:
 	$(MAKE) -C cl/api clean
 	$(MAKE) -C cl/api
 
-sl/api:
-	$(MAKE) -C sl/api clean
-	$(MAKE) -C sl/api
-
-api: cl/api sl/api
 
 # unpack the release of Boost
 $(BOOST_STABLE): $(BOOST_STABLE_TGZ)
