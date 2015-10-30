@@ -5,7 +5,8 @@ Instructions for SV-COMP'15
 
    * GCC and G++
     - on Ubuntu/Debian provided by packages called 'g++' and 'gcc'.
-    We tested our tool using 'gcc-4.8' for compiling test cases.
+    We tested our tool using 'gcc-4.8' for compiling test cases
+	and 'g++-4.9' and the newer versions for compiling Forester.
 
    * CMake 2.8+
      - available at http://www.cmake.org
@@ -66,8 +67,8 @@ Instructions for SV-COMP'15
       file
           The path to the file with program under verification
 
-   Since Forester participates only in the Memory Safety and Heap Manipulation
-   categories the 32-bit architecture is used by default and cannot be changed
+   Since Forester participates only in the HeapMemSafety category
+   the 32-bit architecture is used by default and cannot be changed
    by any parameter of the script.
 
    A result of a verification task is an item from { TRUE, FALSE, UNKNOWN } and
@@ -78,7 +79,7 @@ Instructions for SV-COMP'15
    the violated property.
 
 3) For evalutation of Forester with 'Benchexec' use 'rundefinition' xml item
-   for definition of parameter '--trace'. The other attributes are set by
-   function 'cmdline' in Python wrapping script for 'Benchexec'.
-   An example of configuration XML file for Benchexec is 'benchmark-example-forester.xml'
+   for definition of parameter '--trace' in XML configuration file.
+   The other attributes are set by function 'cmdline' in Forester wrapping script for 'Benchexec'.
+   An example of configuration XML file for Benchexec is in 'benchmark-example-forester.xml'
    in this folder.
