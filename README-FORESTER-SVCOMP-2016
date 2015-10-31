@@ -6,7 +6,7 @@ Instructions for SV-COMP'15
    * GCC and G++
     - on Ubuntu/Debian provided by packages called 'g++' and 'gcc'.
     We tested our tool using 'gcc-4.8' for compiling test cases
-	and 'g++-4.9' and the newer versions for compiling Forester.
+	and 'g++-4.8' and the newer for compiling Forester.
 
    * CMake 2.8+
      - available at http://www.cmake.org
@@ -54,7 +54,7 @@ Instructions for SV-COMP'15
           The file to print the witness to (for the answer FALSE)
 
       --properties PROPERTIES
-          The file with the specified verification properties.  When not
+          The file with the specified verification properties. When not
           specified, the default path for a file at 'path/file' is
           'path/ALL.prp'.
 
@@ -78,7 +78,7 @@ Instructions for SV-COMP'15
    and one of them is violated, the answer has the format FALSE(p) where p is
    the violated property.
 
-3) For evalutation of Forester with 'Benchexec' use 'rundefinition' xml item
+3) For evalutation of Forester with 'Benchexec' use 'rundefinition' XML item
    for definition of parameter '--trace' in XML configuration file.
    The other attributes are set in function 'cmdline' in Forester wrapping script for 'Benchexec'.
    An example of configuration XML file for Benchexec is in 'benchmark-example-forester.xml'
