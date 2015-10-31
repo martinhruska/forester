@@ -733,6 +733,16 @@ protected:
 				);
 				break;
 
+			case cl_type_e::CL_TYPE_ARRAY:
+				if (op.data.cst.code == CL_TYPE_STRING)
+				{
+					append(
+						new FI_load_cst(&insn, dst, Data::createStr(
+								op.data.cst.data.cst_string.value))
+					);
+					break;
+				}
+
 			default:
 				throw NotImplementedException(translTypeCode(op.data.cst.code) +
 					": constant type", &insn.loc);

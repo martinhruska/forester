@@ -204,6 +204,7 @@ enum class data_type_e
 	t_void_ptr,       ///< void pointer (only has a size)
 	t_ref,            ///< reference to a tree automaton
 	t_int,            ///< integer
+	t_str,            ///< string
 	t_bool,           ///< Boolean
 	t_struct,         ///< structure
 	t_fnc,            ///< function
@@ -249,7 +250,8 @@ struct Data
 	{
 		void*	d_native_ptr;               ///< real memory pointer
 		size_t	d_void_ptr_size;            ///< void pointer size
-		const char*   d_fnc_name;                 ///< name of a function
+		const char*   d_fnc_name;			///< name of a function
+		const char*   d_str;                ///< string
 
 		/// information about reference
 		struct {
@@ -305,6 +307,8 @@ struct Data
 				this->d_struct = new std::vector<item_info>(*data.d_struct); break;
 			case data_type_e::t_fnc:
 				this->d_fnc_name = data.d_fnc_name; break;
+			case data_type_e::t_str:
+				this->d_str = data.d_str; break;
 			default: break;
 		}
 	}
@@ -352,6 +356,8 @@ struct Data
 				this->d_struct = new std::vector<item_info>(*rhs.d_struct); break;
 			case data_type_e::t_fnc:
 				this->d_fnc_name = rhs.d_fnc_name; break;
+			case data_type_e::t_str:
+				this->d_str = rhs.d_str; break;
 			default: break;
 		}
 
@@ -484,6 +490,13 @@ struct Data
 		return data;
 	}
 
+	static Data createStr(const char* str)
+	{
+		Data data(data_type_e::t_str);
+		data.d_str = str;
+		return data;
+	}
+
 	/**
 	 * @brief Creates new data with old data and new value
 	 *
@@ -518,6 +531,10 @@ struct Data
 			case (data_type_e::t_fnc):
 			{
 				return createFnc(oldData.d_fnc_name);
+			}
+			case (data_type_e::t_str):
+			{
+				return createStr(oldData.d_str);
 			}
 			default:
 			{
@@ -725,6 +742,16 @@ struct Data
 	bool isInt() const
 	{
 		return this->type == data_type_e::t_int;
+	}
+
+	bool isFncName() const
+	{
+		return this->type == data_type_e::t_fnc;
+	}
+
+	bool isStr() const
+	{
+		return this->type == data_type_e::t_str;
 	}
 
 	/**
