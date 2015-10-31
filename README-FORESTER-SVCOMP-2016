@@ -1,4 +1,4 @@
-Instructions for SV-COMP'15
+Instructions for SV-COMP'16
 ===========================
 
 0) Dependencies:
@@ -55,8 +55,8 @@ Instructions for SV-COMP'15
 
       --properties PROPERTIES
           The file with the specified verification properties. When not
-          specified, the default path for a file at 'path/file' is
-          'path/ALL.prp'.
+          specified, the default path for a property file in case of verified
+		  file 'path/file' is 'path/ALL.prp'.
 
       --false
           Print FALSE when a bug is found
