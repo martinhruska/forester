@@ -26,6 +26,7 @@ all:
 	mkdir -p ../fa_build
 	cd ../fa_build && $(CMAKE) ../fa
 	$(MAKE) -C ../fa_build
+	cp ../fa_build/sv_comp_run.py ../
 
 check: all
 	cd ../fa_build && $(CTEST) --output-on-failure
