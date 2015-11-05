@@ -1,1 +1,0 @@
-../../cl_build/tests/vkdebug.sh

@@ -1,1 +1,0 @@
-../slayer/reverse_seg_cyclic.c

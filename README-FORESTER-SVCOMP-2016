@@ -43,7 +43,8 @@ Instructions for SV-COMP'16
   'fa/libvata/README' for further information about the compilation of libVATA
   (libVATA is a tree automata library used by Forester).
 
-2) Use the script 'fa_build/sv_comp_run.py' to run Forester on a test-case:
+2) Use the script './sv_comp_run.py' (also located in 'fa_build/sv_comp_run.py')
+   to run Forester on a test-case:
 
     Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--time] file
 

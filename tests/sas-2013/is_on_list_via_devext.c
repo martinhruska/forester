@@ -1,1 +1,0 @@
-../slayer/is_on_list_via_devext.c

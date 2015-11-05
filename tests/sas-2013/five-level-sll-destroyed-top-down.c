@@ -1,1 +1,0 @@
-../predator-regre/test-0234.c
