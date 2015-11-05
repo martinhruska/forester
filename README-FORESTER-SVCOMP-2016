@@ -45,7 +45,7 @@ Instructions for SV-COMP'16
 
 2) Use the script 'fa_build/sv_comp_run.py' to run Forester on a test-case:
 
-    Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--false] [--time] file
+    Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--time] file
 
       -h
           Print help 
@@ -57,9 +57,6 @@ Instructions for SV-COMP'16
           The file with the specified verification properties. When not
           specified, the default path for a property file in case of verified
 		  file 'path/file' is 'path/ALL.prp'.
-
-      --false
-          Print FALSE when a bug is found
 
       --time
           Print consumed CPU time
