@@ -57,7 +57,7 @@ int main() {
 			data->next = NULL;
 			data->data = NULL;
 			
-			y->next;
+			y = y->next;
 		}
 
 	}
