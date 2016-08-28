@@ -47,6 +47,8 @@ int main() {
 		while (y != NULL)
 		{
 			data = y->data;
+			__VERIFIER_assert(y != NULL);
+			y = y->next;
 			__VERIFIER_assert(data != NULL);
 			while (data->next != NULL)
 			{
@@ -56,8 +58,6 @@ int main() {
 			data = data->next;
 			data->next = NULL;
 			data->data = NULL;
-			
-			y = y->next;
 		}
 
 	}
