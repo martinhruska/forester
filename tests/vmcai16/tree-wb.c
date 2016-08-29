@@ -8,6 +8,8 @@
     N->data = COLOR;                                          \
     __VERIFIER_assert(N != NULL);
 
+#define IS_LEAF(N) \
+	n != NULL && n->left == NULL && n->right == NULL
 
 #define WHITE 0
 #define BLUE 1
@@ -52,7 +54,8 @@ int main()
 		{
 			ALLOC_NODE(n->left, WHITE);
 		}
-		else
+		// else
+		if (__VERIFIER_nondet_int())
 		{
 			ALLOC_NODE(n->right, WHITE);
 		}
@@ -122,6 +125,7 @@ int main()
 
 	__VERIFIER_assert(n != NULL);
     // look for another blue guy
+	/*
 	while ((n->left != NULL || n->right != NULL))
 	{
 		__VERIFIER_assert(n != NULL);
@@ -137,15 +141,25 @@ int main()
 		__VERIFIER_assert(n != NULL);
 		__VERIFIER_assert(n->data != BLUE);
 	}
+	*/
 
 	// destroy the list
 	while (root)
 	{
-		TREE *pred = NULL;
 		n = root;
 		while (n->left != NULL || n->right != NULL)
 		{
-			pred = n;
+			if (IS_LEAF(n->left))
+			{
+				free(n->left);
+				n->left = NULL;
+			}
+			if (IS_LEAF(n->right))
+			{
+				free(n->right);
+				n->right = NULL;
+			}
+
 			if (n->left != NULL && __VERIFIER_nondet_int())
 			{
 				n = n->left;
@@ -159,14 +173,11 @@ int main()
 				n = n->left;
 			}
 		}
-		if (pred) {
-			if (n == pred->left)
-				pred->left = NULL;
-			else
-				pred->right = NULL;
-		} else
+		if (n == root)
+		{
+			free(root);
 			root = NULL;
-		free(n);
+		}
 	}
 
 	return 0;
