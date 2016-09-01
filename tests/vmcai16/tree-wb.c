@@ -125,7 +125,6 @@ int main()
 
 	__VERIFIER_assert(n != NULL);
     // look for another blue guy
-	/*
 	while ((n->left != NULL || n->right != NULL))
 	{
 		__VERIFIER_assert(n != NULL);
@@ -141,7 +140,6 @@ int main()
 		__VERIFIER_assert(n != NULL);
 		__VERIFIER_assert(n->data != BLUE);
 	}
-	*/
 
 	// destroy the list
 	while (root)

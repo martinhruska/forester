@@ -1,14 +1,15 @@
 #include <stdlib.h>
 #include <verifier-builtins.h>
 
-#define ALLOC_NODE(N, PAR, COLOR)                             \
+#define ALLOC_NODE(N, COLOR)                                  \
     N = malloc(sizeof(TREE));                                 \
     N->left = NULL;                                           \
     N->right = NULL;                                          \
     N->data = COLOR;                                          \
-    N->parent = PAR;                                          \
     __VERIFIER_assert(N != NULL);
 
+#define IS_LEAF(N) \
+	n != NULL && n->left == NULL && n->right == NULL
 
 #define WHITE 0
 #define BLUE 1
@@ -17,7 +18,6 @@ typedef struct TTREE
 {
 	struct TTREE* left;
 	struct TTREE* right;
-	struct TTREE* parent;
 	int data;
 } TREE;
 
@@ -25,7 +25,7 @@ int main()
 {
 	// create the head
 	TREE* root = NULL;
-	ALLOC_NODE(root, NULL, WHITE)
+	ALLOC_NODE(root, WHITE)
 	TREE* n = root;
 
 	// create an arbitrary white tree
@@ -50,63 +50,33 @@ int main()
 
 
 		// create a node
-		// if (__VERIFIER_nondet_int())
+		if (__VERIFIER_nondet_int())
 		{
-			ALLOC_NODE(n->left, n, WHITE);
+			ALLOC_NODE(n->left, WHITE);
 		}
-		// if (__VERIFIER_nondet_int())
+		// else
+		if (__VERIFIER_nondet_int())
 		{
-			ALLOC_NODE(n->right, n, WHITE);
+			ALLOC_NODE(n->right, WHITE);
 		}
 	}
 
-	// insert a blue guy
-	if (__VERIFIER_nondet_int()) { // the blue guy will be the root
-		ALLOC_NODE(n, NULL, BLUE);
-		if (__VERIFIER_nondet_int())
-		{
-			n->left = root;
-		}
+	n = root;
+	// Choose one node to mark it blue
+	while ((n->left != NULL || n->right != NULL) && __VERIFIER_nondet_int())
+	{
+		__VERIFIER_assert(n != NULL);
+		if (n->left != NULL && n->right != NULL && __VERIFIER_nondet_int())
+			n = n->left;
+		else if (n->right != NULL)
+			n = n->right;
+		else if (n->left != NULL)
+			n = n->left;
 		else
-		{
-			n->right = root;
-		}
-		root = n;
+			__VERIFIER_assert(0);
 	}
-	else 
-	{ // choose a predecessor of the blue guy
-		n = root;
-		while ((n->left != NULL || n->right != NULL) && __VERIFIER_nondet_int())
-		{
-			__VERIFIER_assert(n != NULL);
-			if (n->left != NULL && n->right != NULL && __VERIFIER_nondet_int())
-				n = n->left;
-			else if (n->right != NULL)
-				n = n->right;
-			else if (n->left != NULL)
-				n = n->left;
-			else
-				__VERIFIER_assert(0);
-		}
-
-		// insert the blue guy
-		TREE* y = NULL;
-		ALLOC_NODE(y, n, BLUE);
-		if (__VERIFIER_nondet_int())
-		{
-			y->left = n->left;
-			if (n->left != NULL)
-				n->left->parent = y;
-			n->left = y;
-		}
-		else
-		{
-			y->right = n->right;
-			if (n->right != NULL)
-				n->right->parent = y;
-			n->right = y;
-		}
-	}
+	__VERIFIER_assert(n != NULL);
+	n->data = BLUE;
 
 	// check the invariant
 	n = root;
@@ -144,15 +114,24 @@ int main()
 		__VERIFIER_assert(n->data != BLUE);
 	}
 
-	// destroy the list
 	/*
+	// destroy the list
 	while (root)
 	{
-		TREE *pred = NULL;
 		n = root;
 		while (n->left != NULL || n->right != NULL)
 		{
-			pred = n;
+			if (IS_LEAF(n->left))
+			{
+				free(n->left);
+				n->left = NULL;
+			}
+			if (IS_LEAF(n->right))
+			{
+				free(n->right);
+				n->right = NULL;
+			}
+
 			if (n->left != NULL && __VERIFIER_nondet_int())
 			{
 				n = n->left;
@@ -166,14 +145,11 @@ int main()
 				n = n->left;
 			}
 		}
-		if (pred) {
-			if (n == pred->left)
-				pred->left = NULL;
-			else
-				pred->right = NULL;
-		} else
+		if (n == root)
+		{
+			free(root);
 			root = NULL;
-		free(n);
+		}
 	}
 	*/
 

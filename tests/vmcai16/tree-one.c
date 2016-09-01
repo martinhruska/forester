@@ -51,7 +51,7 @@ int main() {
 			n->left = malloc(sizeof(*n));
 			tmp = n->left;
 		}
-		else
+		if (__VERIFIER_nondet_int())
 		{
 			n->right = malloc(sizeof(*n));
 			tmp = n->right;
