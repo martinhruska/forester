@@ -28,7 +28,7 @@ int main()
 	// create the head
 	SLL* head = malloc(sizeof(SLL));
 	head->next = NULL;
-	head->data = 0;
+	head->data = WHITE;
 
 	SLL* x = head;
 
@@ -43,9 +43,13 @@ int main()
 	while(x != NULL)
 	{
 		SLL* next = x->next;
-		x->next = prev;
-		prev = x;
-		x = next;
+		// | PREV | X | NEXT == X->NEXT
+		x->next = prev; // Previous before reversion is now the next one
+		// | X->NEXT == PREV | X | NEXT
+		prev = x; // Remember this one
+		// | X->NEXT | PREV == X | NEXT
+		x = next; // Go to the next
+		// | ... | PREV | X == NEXT
 	}
 	head = prev;
 
