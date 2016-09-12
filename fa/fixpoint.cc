@@ -485,7 +485,21 @@ void addInitialPredicates(
 	const size_t q3 = fae.freshState();
 	const size_t q4 = fae.freshState();
 
-	initPred->addFinalState(q0);
+	// V-tree
+
+	initPred->addFinalState(q1);
+
+	// q1 -> B(q2,q2)
+	initPred->addTransition(createChildren(q2,q2,r1), treeNodeLabel, q1);
+	// q1 -> W(q1,q2)
+	initPred->addTransition(createChildren(q1,q2,r0), treeNodeLabel, q1);
+	// q1 -> W(q2,q1)
+	initPred->addTransition(createChildren(q2,q1,r0), treeNodeLabel, q1);
+	// q2 -> W/B(q2,q2)
+	initPred->addTransition(createChildren(q2,q2,r1), treeNodeLabel, q2);
+	initPred->addTransition(createChildren(q2,q2,r0), treeNodeLabel, q2);
+    initPred->addTransition(createChildren(r0,r0,r0), treeNodeLabel, q2);
+    initPred->addTransition(createChildren(r0,r0,r1), treeNodeLabel, q2);
 
 	// Adding q0
 	// initPred->addTransition(createChildren(q1,q3,r1), treeNodeLabel, q0);
@@ -518,6 +532,8 @@ void addInitialPredicates(
     // initPred->addTransition(createChildren(r0,r0,r0), treeNodeLabel, q4);
 
 
+	/*
+	initPred->addFinalState(q0);
 	// Adding q0
 	initPred->addTransition(createChildren(q0,q2,r0), treeNodeLabel, q0);
     initPred->addTransition(createChildren(q2,q0,r0), treeNodeLabel, q0);
@@ -537,6 +553,7 @@ void addInitialPredicates(
     initPred->addTransition(createChildren(q2,q2,r1), treeNodeLabel, q2);
 	initPred->addTransition(createChildren(r0,r0,r1), treeNodeLabel, q2);
 	initPred->addTransition(createChildren(r0,r0,r0), treeNodeLabel, q2);
+	 */
 
 	std::shared_ptr<const TreeAut> res = std::shared_ptr<TreeAut>(initPred);
 	predicates.push_back(res);
@@ -649,6 +666,7 @@ TreeAutVec FI_abs::learnPredicates(
 	std::shared_ptr<const FAE> normFAEFwd = areSame ? fwdState->GetFAE() : fwdState->newNormalizedFAE();
 	FA_DEBUG_AT(1, "FWD Learn predicates " << *fwdState);
 	FA_DEBUG_AT(1, "BWD Learn predicates " << *bwdState);
+	// std::cerr << "FA from forward run in the point of an empty intersection in backward run: " << *fwdState->GetFAE() << '\n';
 
 	if (normFAEBwd->getRootCount() < FIXED_REG_COUNT ||
 			(normFAEBwd->getRootCount() == FIXED_REG_COUNT &&
@@ -789,7 +807,8 @@ void FI_abs::weakFusion(
 
 
 void FI_abs::abstract(
-	FAE&                 fae)
+	FAE&                  fae,
+	std::ostringstream&   oss)
 {
 	fae.unreachableFree();
 
@@ -807,10 +826,13 @@ void FI_abs::abstract(
 
 	if ((FA_START_WITH_PREDICATE_ABSTRACTION || !predicates_.empty()) && FA_USE_PREDICATE_ABSTRACTION)
 	{	// for predicate abstraction
+        oss << "Before abstraction in FAE " << fae << "\nWith " << this->getPredicates().size() << " predicates\n";
+		for (const auto& pred : this->getPredicates()) oss << *pred << "\n";
 		for (size_t i = 0; i < fae.getRootCount(); ++i)
 		{
-			abstraction.predicateAbstraction(i, this->getPredicates());
+			abstraction.predicateAbstraction(i, this->getPredicates(), oss);
 		}
+		oss << "\nAfter abstraction FAE " << fae << "\n";
 	}
 	else
 	{	// for finite height abstraction
@@ -839,6 +861,8 @@ void FI_abs::abstract(
 // FI_abs
 void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 {
+	state.getOss() << "Executing state " << state.getId() << "\n";
+	state.clearOss();
 	auto& ainfo = state.GetAbstractionInfo();
 	ainfo.clear();
 
@@ -901,7 +925,8 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	ainfo.faeAtIteration_[0] = std::shared_ptr<FAE>(new FAE(*fae));
 	assert(ainfo.faeAtIteration_.at(0)->getRootCount() <= state.GetFAE()->getRootCount());
 
-	abstract(*fae);
+    std::ostringstream oss;
+	abstract(*fae, state.getOss());
 #if FA_ALLOW_FOLDING
 	ainfo.learn1Boxes_ = SymState::BoxesAtRoot(
 			Folding::learn1(*fae, boxMan_, Normalization::computeForbiddenSet(*fae))
@@ -926,7 +951,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 				ainfo.faeAtIteration_[ainfo.abstrIteration_] = std::shared_ptr<FAE>(
 						new FAE(*fae));
 
-				abstract(*fae);
+				abstract(*fae, state.getOss());
 
 				forbidden.clear();
 				for (size_t i = 0; i < FIXED_REG_COUNT; ++i)

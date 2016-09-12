@@ -89,26 +89,28 @@ public:   // methods
 };
 
 template<class C, class T>
-void printMapping(const C& mapping, const T& translator)
+void printMapping(const size_t abstrRoot,
+				  const C& mapping, const T& translator, std::ostringstream& oss)
 {
-	std::cerr << "Mapping ";
+	oss << "Mapping for root " << abstrRoot << ": ";
 	for (const auto transPair : translator)
 	{
-		std::cerr << FA::writeState(transPair.first) << " -> {";
+		oss << FA::writeState(transPair.first) << " -> {";
 		assert(transPair.second < mapping.size());
 		for (const auto s : mapping.at(transPair.second))
 		{
-			std::cerr << FA::writeState(s) << ", ";
+			oss << FA::writeState(s) << ", ";
 		}
-		std::cerr << "}; ";
+		oss << "}; ";
 	}
-	std::cerr << "\n";
+	oss << "\n";
 }
 }
 
 void Abstraction::predicateAbstraction(
 		const size_t                                          abstrRoot,
-		const std::vector<std::shared_ptr<const TreeAut>>&    predicates)
+		const std::vector<std::shared_ptr<const TreeAut>>&    predicates,
+		std::ostringstream&                                   oss)
 {
 	FA_DEBUG_AT(1,"Predicate abstraction input: predicates " << predicates.size() << " FAE: " << fae_);
 
@@ -147,14 +149,15 @@ void Abstraction::predicateAbstraction(
             matchWith[abstrTaStateIndex[matchPair.first.first]].insert(matchPair.first.second);
         }
 	}
+	printMapping(abstrRoot, matchWith, abstrTaStateIndex, oss);
 
-    std::ostringstream oss;
+    std::ostringstream oss1;
     for (size_t i = 0; i < matchWith.size(); ++i)
     {
-        oss << ", " << i << " -> ";
-        utils::printCont(oss, matchWith[i]);
+        oss1 << ", " << i << " -> ";
+        utils::printCont(oss1, matchWith[i]);
     }
-    FA_DEBUG_AT(1,"matchWith: " << oss.str());
+    FA_DEBUG_AT(1,"matchWith: " << oss1.str());
 
     // create the relation
     rel.assign(numStates, std::vector<bool>(numStates, false));

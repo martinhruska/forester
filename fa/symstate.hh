@@ -127,6 +127,9 @@ private:  // data members
 
 	size_t id_;
 
+	std::ostringstream oss_;
+
+
 private:  // methods
 
 	SymState(const SymState&);
@@ -148,10 +151,32 @@ public:   // methods
 		normalizationInfo_(),
 		roots_(),
 		garbageRoots_(),
-		id_()
+		id_(0),
+		oss_()
 	{
 		static size_t id = 0;
 		id_ = id++;
+	}
+
+	void clearOss()
+	{
+        oss_.str(std::string());
+		oss_.clear();
+	}
+
+	std::ostringstream& getOss()
+	{
+		return oss_;
+	}
+
+	const std::ostringstream& getOss() const
+	{
+		return oss_;
+	}
+
+	size_t getId() const
+	{
+		return id_;
 	}
 
 	/**

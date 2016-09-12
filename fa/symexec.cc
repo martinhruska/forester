@@ -359,6 +359,7 @@ protected:
 
 	void addNewPredicates(FI_abs *failPoint = nullptr)
 	{
+		bool print = false;
 		FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
 		for (AbstractInstruction *instr : this->GetAssembly().code_)
 		{
@@ -367,8 +368,9 @@ protected:
 				FI_abs *absInstr = dynamic_cast<FI_abs *>(instr);
 				if (nullptr != absInstr)
 				{
-					absInstr->addPredicate(predicates_);
-					absInstr->printDebugInfoAboutPredicates();
+					absInstr->addPredicate(predicates_, print);
+					print = false;
+					// absInstr->printDebugInfoAboutPredicates();
 				}
 			}
 		}
@@ -467,6 +469,7 @@ protected:
                 assert(!predicates_.empty());
                 assert(nullptr != failPoint);
                 assert(nullptr != failPoint->GetInstr());
+                // std::cerr << "Empty intersection point\n" << failPoint->getOss().str() << '\n';
                 FA_LOG("The error was at " << failPoint->GetInstr()->insn()->loc << " " << *(failPoint->GetInstr()->insn()));
 
                 printRefinementInfo(failPoint);

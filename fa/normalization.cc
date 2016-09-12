@@ -487,7 +487,8 @@ Normalization::TreeAutVec Normalization::revertNormalization(
 		assert(tas.size() > mappingPair.second);
 		// make deep copy of TA
 		auto tmp = std::shared_ptr<TreeAut>(new TreeAut());
-		newFAE.relabelReferences(*tmp,
+		if (tas.size() > mappingPair.second && tas.at(mappingPair.second) != nullptr) // TODO predab: not really sure when this could happen
+			newFAE.relabelReferences(*tmp,
 								 *tas.at(mappingPair.second), reverseMap);
 		res[mappingPair.first] = tmp;
 		assert(res[mappingPair.first] != nullptr);

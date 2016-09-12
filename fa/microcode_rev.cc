@@ -96,6 +96,7 @@ namespace
 			throw e;
 		}
 
+		std::shared_ptr<FAE> unnormalizedFAE = std::shared_ptr<FAE>(new FAE(*fae));
         if (roots.size() > 0 && fwdSucc.GetFAE()->getRootCount() + 1 == fae->getRootCount())
         {
             Normalization::NormalizationInfo normInfo;
@@ -103,7 +104,15 @@ namespace
             Normalization::normalize(*fae, &bwdSucc, normInfo, forbiddenNorm, true);
         }
 
-		tmpState->SetFAE(fae);
+		if (fae->getRootCount() == fwdSucc.GetFAE()->getRootCount())
+		{
+			tmpState->SetFAE(fae);
+		}
+		else
+		{
+			tmpState->SetFAE(unnormalizedFAE);
+		}
+
 
 		return tmpState;
 	}
@@ -401,6 +410,35 @@ SymState* FI_check::reverseAndIsect(
 	for (const auto& rootIndex : fwdPred.getGarbageRoots())
 	{ // add all removed garbage roots back to FA
 		assert(fae->getRootCount() <= rootIndex || fae->getRoot(rootIndex) != nullptr);
+		if (fae->getRootCount() <= rootIndex)
+		{
+			fae->resizeRoots(rootIndex+1);
+			fae->connectionGraph.reset(rootIndex+1);
+		}
+		else if (fae->getRootCount() < fwdPred.GetFAE()->getRootCount() &&
+				fae->getRoot(rootIndex) != nullptr)
+		{
+			const size_t origSize = fae->getRootCount();
+
+			fae->resizeRoots(fwdPred.GetFAE()->getRootCount());
+			fae->connectionGraph.reset(fwdPred.GetFAE()->getRootCount());
+			for (size_t i = origSize-1; i >= rootIndex; --i)
+			{
+				fae->setRoot(i+1, fae->getRoot(i));
+			}
+			fae->setRoot(rootIndex, nullptr);
+		}
+		else if (fae->getRoot(rootIndex) != nullptr)
+		{
+			size_t nullIndex = 0;
+			for (; nullIndex < fae->getRootCount() && fae->getRoot(nullIndex) != nullptr; ++nullIndex);
+
+			if (nullIndex < fae->getRootCount())
+			{
+				fae->setRoot(nullIndex, fae->getRoot(rootIndex));
+				fae->setRoot(rootIndex, nullptr);
+			}
+		}
 		vm.nodeCopy(rootIndex, fwdVM, rootIndex /*reverseMapping.at(rootIndex)*/);
 	}
 	assert(fae->getAllocRootCount() == tmpState->GetFAE()->getAllocRootCount()
@@ -432,6 +470,7 @@ SymState* FI_check::reverseAndIsect(
 	tmpState->SetFAE(fae);
 	 */
 
+	// std::cerr << "Fertig\n";
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FI_check");
 	return tmpState;
 }

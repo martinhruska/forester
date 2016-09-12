@@ -178,7 +178,8 @@ private:  // methods
 	 *                      be performed
 	 */
 	void abstract(
-		FAE&             fae);
+		FAE&                fae,
+		std::ostringstream& oss);
 
 	void strongFusion(
 		FAE&             fae);
@@ -240,13 +241,13 @@ public:   // methods
 	 *
 	 * @param[in]  predicate  The predicate to be added
 	 */
-	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate)
+	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate, const bool print)
 	{
 		// if (!arePredicatesNew(predicates_, predicate))
 		// {
 		// 	assert(false);
 		// }
-		assert(arePredicatesNew(predicates_, predicate));
+		// assert(arePredicatesNew(predicates_, predicate));
 
 
 		size_t maxState = (this->predicates_.size() > 0) ?
@@ -254,8 +255,11 @@ public:   // methods
 						  1;
 		assert(this->predicates_.size() == 0 || maxState > 1);
 
+		if (print)
+			std::cerr << "\nAFTER Backward run added new predicates: \n";
 		for (const auto& pred : predicate)
 		{
+			if (pred == nullptr) continue;
 			assert(maxState >= 1);
 			assert(this->predicates_.size() == 0 || maxState > 1);
 			auto tmp = std::shared_ptr<TreeAut>(new TreeAut());
@@ -274,13 +278,22 @@ public:   // methods
 					this->predicates_.end(),
 					// reduced);
 					tmp);
+				if (print)
+					std::cerr << "Predicate " << *tmp << '\n';
 			}
 			// else
 			{
 			 	auto abstracted = Abstraction::heightAbstractionTA(*tmp, FA_ABS_HEIGHT, SmartTMatchF());
-			 	this->predicates_.insert(this->predicates_.end(), abstracted);
-				// std::cerr << "Added Predicate Orig " << *tmp << '\n';
-				// std::cerr << "Added Predicate Abstracted " << *abstracted << '\n';
+				auto abstractedRenamed = std::shared_ptr<TreeAut>(new TreeAut());
+
+				FAE::uniqueFromState(
+						*abstractedRenamed,
+				        *abstracted,
+				        predicates_.back()->getHighestStateNumber()+1);
+
+				this->predicates_.insert(this->predicates_.end(), abstractedRenamed);
+				if (print)
+				 	std::cerr << "Predicate (abstracted version) " << *abstracted;
 			 	// auto first = std::shared_ptr<TreeAut>(new TreeAut(*this->predicates_.front()));
 			 	// VATAAdapter::disjointUnion(*first, *tmp);
 			 	// auto abstracted1 = Abstraction::heightAbstractionTA(*first, FA_ABS_HEIGHT, SmartTMatchF());
@@ -289,6 +302,8 @@ public:   // methods
 
 			maxState = this->predicates_.back()->getHighestStateNumber();
 		}
+		if (print)
+			std::cerr << "====================================\n";
 		// predicates_.insert(predicates_.end(), predicate.back());
 
 		// predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());

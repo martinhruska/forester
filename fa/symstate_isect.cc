@@ -564,6 +564,10 @@ void SymState::SubstituteRefs(
 
 		const TreeAut* thisRoot = thisFAE->getRoot(thisRef).get();
 		const TreeAut* srcRoot  = srcFAE->getRoot(srcRef).get();
+		if ((nullptr == thisRoot) || (nullptr == srcRoot))
+		{
+			continue;
+		}
 
 		assert((nullptr != thisRoot) && (nullptr != srcRoot));
 
@@ -571,6 +575,7 @@ void SymState::SubstituteRefs(
 			thisVar.d_ref.root, thisRoot->getFinalState(),
 			srcVar.d_ref.root, srcRoot->getFinalState());
 	}
+
 
 	while (!engine.wsEmpty())
 	{
@@ -681,6 +686,11 @@ void SymState::SubstituteRefs(
 
 							const TreeAut* thisNewTA = thisFAE->getRoot(thisNewRoot).get();
 							const TreeAut* srcNewTA  = srcFAE->getRoot(srcNewRoot).get();
+
+							if ((nullptr == thisNewTA) || (nullptr == srcFAE))
+							{
+								break;
+							}
 							assert((nullptr != thisNewTA) && (nullptr != srcNewTA));
 
 							engine.makeProductState(
@@ -1013,6 +1023,7 @@ void SymState::Intersect(
 
 							const TreeAut* thisNewTA = thisFAE->getRoot(thisNewRoot).get();
 							const TreeAut* fwdNewTA  = fwdFAE->getRoot(fwdNewRoot).get();
+
 							assert((nullptr != thisNewTA) && (nullptr != fwdNewTA));
 
 							RootState rootState = engine.makeProductState(

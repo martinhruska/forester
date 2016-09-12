@@ -106,7 +106,8 @@ TreeAut& FAE::relabelReferences(
 			{
 				if (data->isRef())
 				{
-					if (index[data->d_ref.root] != static_cast<size_t>(-1))
+                    // TODO: first part of condition is added ad-hoc
+					if (index.size() > data->d_ref.root && index[data->d_ref.root] != static_cast<size_t>(-1))
 					{
 						lhs.push_back(this->addData(dst, Data::createRef(index[data->d_ref.root], data->d_ref.displ)));
 					}

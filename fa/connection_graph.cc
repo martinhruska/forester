@@ -64,6 +64,10 @@ void ConnectionGraph::updateStateSignature(
 
 		for (size_t i = 0; i < v.size(); ++i)
 		{
+			if (i >= oldSig.size())
+			{
+				oldSig.resize(i+1);
+			}
 			// Assertions
 			//assert(v[i].root == oldSig[i].root);
 			assert(v[i].defines == oldSig[i].defines);
@@ -627,6 +631,10 @@ void ConnectionGraph::visit(
 {
 	// Assertions
 	assert(c < visited.size());
+	if (c >= visited.size())
+	{
+		return;
+	}
 
 	if (visited[c])
 	{	// in case the root has already been visited
