@@ -32,10 +32,26 @@ int main()
 
 	SLL* x = head;
 
+	// allocate list
 	ALLOC_NONDET(x)
-	ALLOC_NODE(x, GREEN)
-	ALLOC_NODE(x, RED)
-	ALLOC_NONDET(x)
+
+	// choose a node which will be colored
+	x = head;
+	while (x->next != NULL && __VERIFIER_nondet_int())
+	{
+		__VERIFIER_assert(x != NULL);
+		x = x->next;
+	}
+	__VERIFIER_assert(x != NULL);
+
+	x->data = GREEN;
+	
+	if (x->next == NULL)
+	{
+		ALLOC_NODE(x, RED)
+	}
+	else
+		x->next->data = RED;
 
 	// reverse
 	SLL* prev = NULL;

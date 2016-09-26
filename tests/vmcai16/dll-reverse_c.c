@@ -6,7 +6,8 @@
 #define RED 2
 
 #define ALLOC_NODE(X, C) \
-	X->next = malloc(sizeof(SLL)); \
+	X->next = malloc(sizeof(DLL)); \
+	X->next->prev = x; \
 	X = X->next; \
 	X->next = NULL; \
 	X->data = C;
@@ -17,37 +18,56 @@
 		ALLOC_NODE(X, WHITE) \
 	}
 
-typedef struct TSLL
+typedef struct TDLL
 {
-	struct TSLL* next;
+	struct TDLL* next;
+	struct TDLL* prev;
 	int data;
-} SLL;
+} DLL;
 
 int main()
 {
 	// create the head
-	SLL* head = malloc(sizeof(SLL));
+	DLL* head = malloc(sizeof(DLL));
 	head->next = NULL;
+	head->prev = NULL;
 	head->data = WHITE;
 
-	SLL* x = head;
+	DLL* x = head;
 
+	// allocate list
 	ALLOC_NONDET(x)
-	ALLOC_NODE(x, GREEN)
-	ALLOC_NODE(x, RED)
-	ALLOC_NONDET(x)
+
+	// choose a node which will be colored
+	x = head;
+	while (x->next != NULL && __VERIFIER_nondet_int())
+	{
+		__VERIFIER_assert(x != NULL);
+		x = x->next;
+	}
+	__VERIFIER_assert(x != NULL);
+
+	x->data = GREEN;
+	
+	if (x->next == NULL)
+	{
+		ALLOC_NODE(x, RED)
+	}
+	else
+		x->next->data = RED;
 
 	// reverse
-	SLL* prev = NULL;
+	DLL* prev = NULL;
 	x = head;
 	while(x != NULL)
 	{
-		SLL* next = x->next;
-		// | PREV | X | NEXT == X->NEXT
+		DLL* next = x->next;
+		// | PREV == X->prev | X | NEXT == X->NEXT
 		x->next = prev; // Previous before reversion is now the next one
-		// | X->NEXT == PREV | X | NEXT
+		x->prev = next;
+		// | X->NEXT == PREV | X | NEXT == X->PREV
 		prev = x; // Remember this one
-		// | X->NEXT | PREV == X | NEXT
+		// | X->NEXT | PREV == X | NEXT == X->PREV
 		x = next; // Go to the next
 		// | ... | PREV | X == NEXT
 	}
