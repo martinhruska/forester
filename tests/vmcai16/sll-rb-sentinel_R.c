@@ -57,6 +57,7 @@ int main()
 			end = end->next;
 			__VERIFIER_assert(null != end);
 			__VERIFIER_assert(BLACK != end->colour);
+			__VERIFIER_assert(0);
 		}
 
 		end = end->next;

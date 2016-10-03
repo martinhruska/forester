@@ -38,7 +38,7 @@ int main()
 		__VERIFIER_assert(0 == x->data);
 		x = x->next;
 	}
-	__VERIFIER_assert(1 == x->data);
+	__VERIFIER_assert(2 == x->data);
 	x = x->next;
 	__VERIFIER_assert(2 == x->data);
 
@@ -51,8 +51,6 @@ int main()
 		free(head);
 	}
 	__VERIFIER_assert(1 == x->data);
-	free(x->next->next);
-	free(x->next);
 	free(x->next);
 	free(x);
 

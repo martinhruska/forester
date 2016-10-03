@@ -43,6 +43,7 @@ int main()
 
 	while (x->next != NULL && x->next->data == 0)
 	{
+		__VERIFIER_assert(x->data == 0);
 		x = x->next;
 	}
 
@@ -65,7 +66,6 @@ int main()
 
 	marked = 0;
 	x = head;
-	// destroy the list
 	while (x != NULL && x->data != 1)
 	{
 		marked = x->data;

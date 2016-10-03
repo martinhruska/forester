@@ -13,6 +13,7 @@ int main()
 	// create the head
 	SLL* head = malloc(sizeof(SLL));
 	head->next = head;
+	head->prev = NULL;
 	head->data = 0;
 
 	SLL* x = head;
