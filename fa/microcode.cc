@@ -31,12 +31,12 @@
 #include "jump.hh"
 #include "memplot.hh"
 #include "microcode.hh"
-#include "normalization.hh"
-#include "programerror.hh"
 #include "regdef.hh"
 #include "splitting.hh"
 #include "symctx.hh"
 #include "virtualmachine.hh"
+#include "backward_run.hh"
+#include "fixpoint.hh"
 
 // anonymous namespace
 namespace
@@ -69,6 +69,35 @@ inline const cl_loc* getLoc(const SymState& state)
 		}
 	}
 
+	bool isSpurious(
+	        ExecutionManager& execMan,
+	        SymState*         tmpState)
+	{
+	    BackwardRun bwdRun(execMan);
+	    SymState* failPoint = nullptr;
+	    std::vector<std::shared_ptr<const TreeAut>> mockPredicates;
+
+	    return bwdRun.isSpuriousCE(tmpState->getTrace(), failPoint, mockPredicates);
+	}
+
+	bool isAbstractionInstruction(const AbstractInstruction *instr)
+	{
+		return fi_type_e::fiFix == instr->getType();
+	}
+
+	void addSpuriousPathToAbstInst(
+			std::shared_ptr<const FAE> fae,
+			SymState* tmpState)
+	{
+        for (auto& state : tmpState->getTrace())
+        {
+            if (isAbstractionInstruction(state->GetInstr()))
+            {
+                FI_abs *absInstr = (FI_abs *) state->GetInstr();
+                absInstr->addSpuriousPath(fae);
+            }
+        }
+	}
 } // namespace
 
 // FI_cond
@@ -193,6 +222,11 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);
+		if (SPURIOUS_CUT && isSpurious(execMan, tmpState))
+		{
+			addSpuriousPathToAbstInst(std::shared_ptr<const FAE>(new FAE(*fae)), tmpState);
+			continue;
+		}
 		// assert(state.GetUsedRoots().size() > 0 ||
 		// 	   fae->getRootCount() == state.GetFAE()->getRootCount());
 		tmpState->SetFAE(std::shared_ptr<FAE>(fae));
@@ -240,6 +274,11 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);
+		if (SPURIOUS_CUT && isSpurious(execMan, tmpState))
+		{
+			addSpuriousPathToAbstInst(std::shared_ptr<const FAE>(new FAE(*fae)), tmpState);
+			continue;
+		}
 		fae->updateConnectionGraph();
 		assert(state.GetUsedRoots().size() > 0 || fae->getRootCount() == state.GetFAE()->getRootCount());
 		execMan.enqueue(tmpState);
@@ -286,6 +325,11 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);
+		if (SPURIOUS_CUT && isSpurious(execMan, tmpState))
+		{
+			addSpuriousPathToAbstInst(std::shared_ptr<const FAE>(new FAE(*fae)), tmpState);
+			continue;
+		}
 		// assert(state.GetUsedRoots().size() > 0 || fae->getRootCount() == state.GetFAE()->getRootCount());
 		tmpState->SetFAE(std::shared_ptr<FAE>(fae));
 		execMan.enqueue(tmpState);

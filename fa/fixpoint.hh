@@ -75,6 +75,7 @@ protected:
 
 	BoxMan &boxMan_;
 
+	std::vector<std::shared_ptr<const FAE>> spuriousPaths_;
 
 protected:
 
@@ -97,6 +98,7 @@ public:
 		fwdConfWrapper_.clear();
 		accs_.clear();
 		accs_.appendRoot(accs_.allocTA());
+		spuriousPaths_.clear();
 	}
 
 #if 0
@@ -133,7 +135,8 @@ public:
 		fwdConfWrapper_(fwdConf_, boxMan),
 		fixpoint_{},
 		ta_(ta),
-		boxMan_(boxMan)
+		boxMan_(boxMan),
+		spuriousPaths_()
 	{
 		accs_.appendRoot(accs_.allocTA());
 	}
@@ -232,6 +235,12 @@ public:   // methods
 
 		return false;
 	}
+
+	void addSpuriousPath(std::shared_ptr<const FAE> fae)
+	{
+		spuriousPaths_.push_back(fae);
+	}
+
 
 	/**
 	 * @brief  Adds a new predicate to abstraction

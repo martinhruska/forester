@@ -14,10 +14,15 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
     TreeAutVec res;
     for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
     {
-        if (bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
+        if (bwdFAE.getRootCount() == 0)
+            break;
+        for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
         {
-            res.push_back(nullptr);
-            continue;
+            if (i >= bwdFAE.getRootCount() || bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
+            {
+                res.push_back(nullptr);
+                continue;
+            }
         }
 
         std::shared_ptr<TreeAut> tmp = std::shared_ptr<TreeAut>(new TreeAut());

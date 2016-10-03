@@ -202,7 +202,8 @@ void reorder(
 bool testInclusion(
 	FAE&                           fae,
 	TreeAut&                       fwdConf,
-	UFAE&                          fwdConfWrapper)
+	UFAE&                          fwdConfWrapper,
+	const std::vector<std::shared_ptr<const FAE>>& spuriousPaths)
 {
 	TreeAut ta = TreeAut::createTAWithSameTransitions(fwdConf);
 
@@ -214,7 +215,26 @@ bool testInclusion(
 
 	if (TreeAut::subseteq(ta, fwdConf))
 	{
-		return true;
+        if (!SPURIOUS_CUT)
+        {
+            return true;
+        }
+        else
+		{
+			for (auto spuriousPathFAEPtr : spuriousPaths)
+			{
+				if (spuriousPathFAEPtr->getRootCount() != fae.getRootCount())
+				{
+					continue;
+				}
+
+				if (!BUIntersection::bottomUpIntersection(*spuriousPathFAEPtr, fae).isEmpty())
+				{ // It is not something new
+					return true;
+				}
+			}
+			return spuriousPaths.size() ? false : true; // it is new, all intersect were empty
+			}
 	}
 
 	fwdConfWrapper.join(ta, index);
@@ -332,6 +352,10 @@ std::pair<bool, std::shared_ptr<FAE>> revertFolding(
 
 			// assert(unfolded.size() == 1);
 			assert(unfolded.size() <= 1);
+			if (unfolded.size() > 1)
+			{
+				// throw std::runtime_error("This should never happen\n");
+			}
 			fae = std::shared_ptr<FAE>(unfolded.at(unfolded.size()-1));
 			// break;
         }
@@ -666,7 +690,6 @@ TreeAutVec FI_abs::learnPredicates(
 	std::shared_ptr<const FAE> normFAEFwd = areSame ? fwdState->GetFAE() : fwdState->newNormalizedFAE();
 	FA_DEBUG_AT(1, "FWD Learn predicates " << *fwdState);
 	FA_DEBUG_AT(1, "BWD Learn predicates " << *bwdState);
-	// std::cerr << "FA from forward run in the point of an empty intersection in backward run: " << *fwdState->GetFAE() << '\n';
 
 	if (normFAEBwd->getRootCount() < FIXED_REG_COUNT ||
 			(normFAEBwd->getRootCount() == FIXED_REG_COUNT &&
@@ -830,9 +853,9 @@ void FI_abs::abstract(
 		for (const auto& pred : this->getPredicates()) oss << *pred << "\n";
 		for (size_t i = 0; i < fae.getRootCount(); ++i)
 		{
-			abstraction.predicateAbstraction(i, this->getPredicates(), oss);
+			abstraction.predicateAbstraction(i, this->getPredicates(), fae, oss);
 		}
-		oss << "\nAfter abstraction FAE " << fae << "\n";
+		oss << "After abstraction in FAE " << fae << "\n";
 	}
 	else
 	{	// for finite height abstraction
@@ -925,7 +948,6 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	ainfo.faeAtIteration_[0] = std::shared_ptr<FAE>(new FAE(*fae));
 	assert(ainfo.faeAtIteration_.at(0)->getRootCount() <= state.GetFAE()->getRootCount());
 
-    std::ostringstream oss;
 	abstract(*fae, state.getOss());
 #if FA_ALLOW_FOLDING
 	ainfo.learn1Boxes_ = SymState::BoxesAtRoot(
@@ -972,7 +994,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 #endif
 	FA_DEBUG_AT(1, "After abstraction " << *fae);
 	// test inclusion
-	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_))
+	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_, spuriousPaths_))
 	{
 		FA_DEBUG_AT(1, "hit " << fwdConf_);
 		FA_DEBUG_AT(1, "hit " << *fae);
@@ -1046,7 +1068,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 	}
 #endif
 	// test inclusion
-	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_))
+	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_, spuriousPaths_))
 	{
 		FA_DEBUG_AT(3, "hit");
 

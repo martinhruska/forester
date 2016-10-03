@@ -110,6 +110,7 @@ void printMapping(const size_t abstrRoot,
 void Abstraction::predicateAbstraction(
 		const size_t                                          abstrRoot,
 		const std::vector<std::shared_ptr<const TreeAut>>&    predicates,
+		FAE&                                                  fae,
 		std::ostringstream&                                   oss)
 {
 	FA_DEBUG_AT(1,"Predicate abstraction input: predicates " << predicates.size() << " FAE: " << fae_);
@@ -123,6 +124,28 @@ void Abstraction::predicateAbstraction(
 	const size_t numStates = abstrTaStateIndex.size();
 	assert(abstrTa.getUsedStates().size() == numStates);
 
+#if ABSTR_IGNORE_LEAVES
+	const Data* data = nullptr;
+	auto modifier = [&fae, &data](TreeAut& dst, size_t state) {
+		const Data* dataTmp;
+		if (fae.isData(state, dataTmp))
+		{ // change data to undef
+			if (data == nullptr)
+			{
+				data = dataTmp;
+			}
+			return fae.addData(dst, *data);
+		}
+		else
+		{
+			return state;
+		}
+	};
+
+	std::shared_ptr<TreeAut> abstrTaTmp(new TreeAut());
+	fae.modifyTransitions(*abstrTaTmp, abstrTa, modifier);
+	abstrTaTmp->buildStateIndex(abstrTaStateIndex);
+#endif
 	FA_DEBUG_AT(1,"Index: " << abstrTaStateIndex);
 
 	// create the initial relation
@@ -138,9 +161,16 @@ void Abstraction::predicateAbstraction(
 
         if (predicate != nullptr)
         {
+#if ABSTR_IGNORE_LEAVES
+			std::shared_ptr<TreeAut> predicateTmp(new TreeAut());
+			fae.modifyTransitions(*predicateTmp, *predicate, modifier);
             const auto res = VATAAdapter::intersectionBU(
-                    abstrTa,
-                    /* *(predicate->getRoot(root)) */ *predicate, &translMap);
+                    *abstrTaTmp,
+                    /* *(predicate->getRoot(root)) */ *predicateTmp, &translMap);
+#else
+            const auto res = VATAAdapter::intersectionBU(
+                    abstrTa, *predicate, &translMap);
+#endif
             FA_DEBUG_AT(1, "RES: " << res);
         }
 

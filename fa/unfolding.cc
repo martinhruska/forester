@@ -43,6 +43,41 @@ void Unfolding::boxMerge(
 		const Box*                     box,
 		const std::vector<size_t>&     rootIndex)
 {
+    TreeAut tmp = this->fae.createTAWithSameBackend();
+    TreeAut tmp2 = this->fae.createTAWithSameBackend();
+//		this->fae.boxMan->adjustLeaves(tmp2, boxRoot);
+    this->fae.relabelReferences(tmp, boxRoot, rootIndex);
+    this->fae.unique(tmp2, tmp);
+    src.copyNotAcceptingTransitions(dst, src);
+    tmp2.copyNotAcceptingTransitions(dst, tmp2);
+    dst.addFinalStates(tmp2.getFinalStates());
+
+    for (const size_t state : src.getFinalStates())
+    {
+        for (auto i = src.begin(state); i != src.end(state); ++i)
+        {
+            std::vector<size_t> lhs;
+            std::vector<const AbstractBox*> label;
+            getChildrenAndLabelFromBox(box, *i, lhs, label);
+
+            for (auto j = tmp2.accBegin(); j != tmp2.accEnd(); ++j)
+            {
+                std::vector<size_t> lhs2 = lhs;
+                std::vector<const AbstractBox*> label2 = label;
+
+                std::vector<size_t> jChildren((*j).GetChildren());
+                lhs2.insert(lhs2.end(), jChildren.begin(), jChildren.end());
+                //for (auto s : (*j).GetChildren()) lhs2.push_back(s);
+                label2.insert(label2.end(),
+                              TreeAut::GetSymbol(*j)->getNode().begin(),
+                              TreeAut::GetSymbol(*j)->getNode().end());
+
+                FA::reorderBoxes(label2, lhs2);
+                dst.addTransition(lhs2, this->fae.boxMan->lookupLabel(label2), (*j).GetParent());
+            }
+        }
+    }
+    /*
 	TreeAut relabeledTA = copyAndRelabelTAToBox(this->fae, boxRoot, rootIndex);
     //		this->fae.boxMan->adjustLeaves(relabeledTA, boxRoot);
     // Copy the original and relabeled automaton to destination
@@ -81,6 +116,7 @@ void Unfolding::boxMerge(
             }
         }
     }
+     */
 }
 
 void Unfolding::getChildrenAndLabelFromBox(

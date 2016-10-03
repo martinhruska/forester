@@ -210,6 +210,8 @@ private:  // data members
 
 	std::vector<std::shared_ptr<const TreeAut>> predicates_;
 
+	size_t min_;
+
 protected:
 
 	/**
@@ -351,7 +353,7 @@ protected:
 			reportErrorNoLocation(e.what());
 	}
 
-	bool isAbstractionInstruction(AbstractInstruction *instr)
+	bool isAbstractionInstruction(const AbstractInstruction *instr)
 	{
 		return fi_type_e::fiFix == instr->getType();
 	}
@@ -421,12 +423,20 @@ protected:
 		}
 	}
 
-	void symbolicExecutionRun()
+	template<class F>
+	void symbolicExecutionRun(F f)
 	{
 		SymState* state = nullptr;
 		while (nullptr != (state = execMan_.dequeueDFS()))
         {	// process all states in the DFS order
             assert(nullptr != state);
+
+#if FINISHING_SYMEXEC
+            if (!f(state))
+            {
+                continue;
+            }
+#endif
 
             printInstructionInfo(state->GetInstr()->insn(), state);
 
@@ -441,6 +451,7 @@ protected:
             execMan_.execute(*state);
         }
 	}
+
 
 	bool processProgramError(const ProgramError& e)
 	{
@@ -459,30 +470,60 @@ protected:
             runBackwardRunAlone(insn, e);
         }
         else if (FA_USE_PREDICATE_ABSTRACTION)
-        {	// in case we are using predicate abstraction
-            FA_LOG("Executing backward run because of " << e.what());
+		{    // in case we are using predicate abstraction
+			FA_LOG("Executing backward run because of " << e.what());
 
-            SymState* failPoint = nullptr;
-            predicates_.clear();
-            if (isSpurious(predicates_, e.state()->getTrace(), failPoint))
-            {
-                assert(!predicates_.empty());
-                assert(nullptr != failPoint);
-                assert(nullptr != failPoint->GetInstr());
-                // std::cerr << "Empty intersection point\n" << failPoint->getOss().str() << '\n';
-                FA_LOG("The error was at " << failPoint->GetInstr()->insn()->loc << " " << *(failPoint->GetInstr()->insn()));
+			SymState *failPoint = nullptr;
+#if FINISHING_SYMEXEC
+			std::vector<std::shared_ptr<const TreeAut>> tmpPredicates;
+			if (isSpurious(tmpPredicates, e.state()->getTrace(), failPoint))
+#else
+			predicates_.clear();
+			if (isSpurious(predicates_, e.state()->getTrace(), failPoint))
+#endif
+			{
+				assert(!predicates_.empty());
+				assert(nullptr != failPoint);
+				assert(nullptr != failPoint->GetInstr());
+				// std::cerr << "Empty intersection point\n" << failPoint->getOss().str() << '\n';
+				FA_LOG("The error was at " << failPoint->GetInstr()->insn()->loc << " "
+										   << *(failPoint->GetInstr()->insn()));
 
-                printRefinementInfo(failPoint);
+				printRefinementInfo(failPoint);
 
+#if FINISHING_SYMEXEC
+				size_t current = 0;
+				for (const auto &symState : e.state()->getTrace())
+				{
+					if (failPoint == symState)
+					{
+						++current;
+						break;
+					} else if (isAbstractionInstruction(symState->GetInstr()))
+					{
+						++current;
+					}
+				}
+				if (current == 0)
+					throw; // just for sure
+
+				if (current < min_)
+				{
+					min_ = current;
+					predicates_.clear();
+					predicates_.insert(predicates_.end(), tmpPredicates.begin(), tmpPredicates.end());
+				}
+#else
                 assertAbstractionInstruction(failPoint->GetInstr());
-				FI_abs *absInstr = dynamic_cast<FI_abs *>(failPoint->GetInstr());
+                FI_abs *absInstr = dynamic_cast<FI_abs *>(failPoint->GetInstr());
                 addNewPredicates(absInstr);
 
                 clearFixpoints();
+#endif
 
-                shouldRefineAndContinue = true;
-            }
-        }
+				shouldRefineAndContinue = true;
+			}
+		}
 
 		if (!shouldRefineAndContinue)
 		{
@@ -515,37 +556,93 @@ protected:
 			assembly_.code_.front()
 		);
 
-		try
-		{	// expecting problems...
-			symbolicExecutionRun();
-			return true; // program is safe
-		}
-		catch (ProgramError& e)
+#if FINISHING_SYMEXEC
+		const SymState* actualErrorState = nullptr;
+		auto stateFilter = [&actualErrorState] (const SymState* state) -> bool {
+				if (actualErrorState == nullptr)
+				{ // no error state
+					return true;
+				}
+
+                if (state->getTrace().size() > actualErrorState->getTrace().size())
+                {
+                    return false;
+                }
+
+                for (int i = state->getTrace().size() - 1, ei = actualErrorState->getTrace().size()-1; i >= 0; --i, --ei)
+                {
+                    // std::cerr << "Index " << i << '\n';
+					// std::cerr << *state->getTrace().at(i)->GetInstr() << " vs " << *actualErrorState->getTrace().at(ei)->GetInstr() << "\n";
+                    if (state->getTrace().at(i)->GetInstr() != actualErrorState->getTrace().at(ei)->GetInstr())
+                    {
+                        // std::cerr << "Problem at " << i << '\n';
+                        return false;
+                    }
+                }
+
+                return true; // all instructions are same
+		};
+
+		bool repeat = true;
+		bool isSuccessful = true;
+		size_t i = 0;
+		min_ = static_cast<size_t>(-1);
+		while(repeat)
 		{
-			assert(nullptr != e.state());
-
-			const bool refineAndContinue = processProgramError(e);
-
-			if (refineAndContinue)
-			{
-				return false; // run was unsuccessful
+#else
+			auto stateFilter = [] (const SymState* state) -> bool { return true; };
+#endif
+			try
+			{    // expecting problems...
+				symbolicExecutionRun(stateFilter);
+#if FINISHING_SYMEXEC
+				if (execMan_.isQueueEmpty())
+				{
+					repeat = false;
+				}
+#else
+				return true; // program is safe
+#endif
 			}
-			else
+			catch (ProgramError &e)
 			{
-				throw;
+				assert(nullptr != e.state());
+
+				const bool refineAndContinue = processProgramError(e);
+
+				if (refineAndContinue)
+				{
+#if FINISHING_SYMEXEC
+					actualErrorState = e.state();
+					isSuccessful = false;
+					repeat = true;
+#else
+					return false; // run was unsuccessful
+#endif
+				} else
+				{
+					throw;
+				}
 			}
+			catch (RestartRequest &e)
+			{    // in case a restart is requested, clear all fixpoint computation points
+				FA_NOTE("Restart requested - new box...");
+				predicates_.clear();
+				clearFixpoints();
+
+				FA_DEBUG_AT(2, e.what());
+
+				return false;
+			}
+#if FINISHING_SYMEXEC
 		}
-		catch (RestartRequest& e)
-		{	// in case a restart is requested, clear all fixpoint computation points
-			FA_NOTE("Restart requested - new box...");
-			predicates_.clear();
-			clearFixpoints();
-
-			FA_DEBUG_AT(2, e.what());
-
-			return false;
-		}
-
+		addNewPredicates();
+		predicates_.clear();
+		clearFixpoints();
+		return isSuccessful;
+#else
+		return true;
+#endif
 		assert(false);
 	}
 
@@ -566,7 +663,8 @@ public:   // methods
 		conf_(conf),
 		dbgFlag_{false},
 		userRequestFlag_{false},
-		predicates_()
+		predicates_(),
+		min_(static_cast<size_t>(-1))
 	{ }
 
 	/**

@@ -141,6 +141,7 @@ public:   // methods
 	void predicateAbstraction(
 		const size_t                                          abstrRoot,
 		const std::vector<std::shared_ptr<const TreeAut>>&    predicates,
+		FAE&                                                  fae,
 		std::ostringstream&                                   oss);
 
 
