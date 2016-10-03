@@ -121,6 +121,16 @@ public:
 		pathsEvaluated_ = 0;
 	}
 
+	bool isQueueEmpty()
+	{
+	    return queue_.empty();
+	}
+
+	size_t queueSize()
+	{
+	    return queue_.size();
+	}
+
 	SymState* createState()
 	{
 		SymState* state = stateRecycler_.alloc();
