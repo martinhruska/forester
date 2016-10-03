@@ -646,6 +646,9 @@ void Folding::componentCut(
 		FAE::reorderBoxes(label, lhs);
 		res.addTransition(lhs, fae_.boxMan->lookupLabel(label), state);
 
+
+		// add the new transition to the source automaton
+		assert(label.size());
 		// add the new transition to the complement automaton
 		assert(cLabel.size());
 		FAE::reorderBoxes(cLabel, cLhs);
