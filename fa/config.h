@@ -87,4 +87,13 @@
  */
 #define FA_BACKWARD_RUN 1
 
+// Cut spurious parts of split -> unsound
+#define SPURIOUS_CUT 0
+
+// Finish all paths in symbolic execution
+#define FINISHING_SYMEXEC 0
+
+// Abstraction ignores leave of predicates and abstracted TA
+#define ABSTR_IGNORE_LEAVES 0
+
 #endif /* CONFIG_H */
