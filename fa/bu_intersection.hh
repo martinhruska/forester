@@ -27,6 +27,25 @@ public:
                 VATA::AutBase::ProductTranslMap productMap) :
             tas_(tav), productMap_(productMap)
         { }
+
+        bool isEmpty()
+        {
+            for (auto ta : tas_)
+            {
+                if (ta == nullptr)
+                {
+                    return true;
+                }
+
+				TreeAut tmp(*ta);
+                if (tmp.areTransitionsEmpty())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     };
 
 
