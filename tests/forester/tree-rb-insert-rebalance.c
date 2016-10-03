@@ -1,5 +1,7 @@
 #include <stdlib.h>
 
+#include "verifier-builtins.h"
+
 int __nondet();
 //#define __nondet() 1
 
@@ -105,7 +107,7 @@ int main() {
 					y = z->parent->parent;
 					//RIGHT_ROTATE(z->parent->parent)
 					RIGHT_ROTATE(y)
-						y = NULL;
+					y = NULL;
 				}
 			}
 			else {
@@ -128,26 +130,31 @@ int main() {
 					y = z->parent->parent;
 					//LEFT_ROTATE(z->parent->parent)
 					LEFT_ROTATE(y)
-						y = NULL;
+					y = NULL;
 				}
 			}
 		}
 		z = NULL;
-		root->colour=BLACK;
+		root->colour = BLACK;
 	}
 
 	//Test that:
 	//there are no two succesive random nodes
 
+
 	//kill the tree (using the aux var r)
 	while (root != &null) {
 		r = root;
+
+
 		while (r->left != &null || r->right != &null) {
 			if (r->left != &null)
 				r = r->left;
 			else
 				r = r->right;
+
 		}
+
 		if (r->parent != &null) {
 			if (r == r->parent->left)
 				r->parent->left = &null;
