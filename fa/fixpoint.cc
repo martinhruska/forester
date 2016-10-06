@@ -234,7 +234,7 @@ bool testInclusion(
 				}
 			}
 			return spuriousPaths.size() ? false : true; // it is new, all intersect were empty
-			}
+        }
 	}
 
 	fwdConfWrapper.join(ta, index);
@@ -1012,6 +1012,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		tmpState->SetFAE(fae);
 		execMan.enqueue(tmpState);
 		ainfo.finalFae_ = tmpState->GetFAE();
+        assert(nullptr != ainfo.finalFae_);
 	}
 	FA_DEBUG_AT_MSG(1, &this->insn()->loc, "AbsInt end " << *fae);
 }
