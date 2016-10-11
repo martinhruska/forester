@@ -371,7 +371,8 @@ std::pair<bool, std::shared_ptr<FAE>> revertFolding(
 void revertAbstraction(
 		SymState*   tmpState,
 		const std::shared_ptr<FAE> faeAtIteration,
-		const Normalization::NormalizationInfo* normInfo=nullptr)
+		const Normalization::NormalizationInfo* normInfo=nullptr,
+		const size_t emptyForbidden = false)
 {
 	SymState fwd;
 	fwd.init(*tmpState);
@@ -379,7 +380,7 @@ void revertAbstraction(
 
 	SymState bwdBackup;
 	bwdBackup.init(*tmpState);
-	tmpState->SetFAE(tmpState->newNormalizedFAE());
+	tmpState->SetFAE(tmpState->newNormalizedFAE(emptyForbidden));
 
 	/* Top-down intersection
     tmpState->Intersect(fwd);
@@ -393,7 +394,7 @@ void revertAbstraction(
 	if (fwd.GetFAE()->getRootCount() != bwdBackup.GetFAE()->getRootCount())
 	{
 		fwd.SetFAE(fwd.newNormalizedFAE());
-		bwdBackup.SetFAE(bwdBackup.newNormalizedFAE());
+		bwdBackup.SetFAE(bwdBackup.newNormalizedFAE(emptyForbidden));
 	}
 	BUIntersection::BUProductResult buProductResult =
 			BUIntersection::bottomUpIntersection(*fwd.GetFAE(), *bwdBackup.GetFAE());
@@ -671,6 +672,90 @@ SymState* FixpointBase::reverseAndIsect(
 		   || ainfo.faeBeforeReorder_->getRootCount() != tmpState->GetFAE()->getRootCount());
 
 	revertAbstraction(tmpState, ainfo.faeBeforeReorder_);
+
+	faeMin->minimizeRoots();
+	tmpState->SetFAE(faeMin);
+
+	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FixpointBase");
+	return tmpState;
+}
+
+
+SymState* FI_fix::reverseAndIsect(
+	ExecutionManager&                      execMan,
+	const SymState&                        fwdPred,
+	const SymState&                        bwdSucc) const
+{
+	(void)fwdPred;
+	SymState* tmpState = execMan.copyState(bwdSucc);
+	tmpState->ClearPredicates();
+	const SymState::AbstractionInfo& ainfo = fwdPred.GetAbstractionInfo();
+
+	assert(ainfo.finalFae_ != nullptr);
+	revertAbstraction(tmpState, std::shared_ptr<FAE>(new FAE(*ainfo.finalFae_)), nullptr, true);
+	assert(!tmpState->GetFAE()->Empty());
+	if (tmpState->GetFAE()->Empty())
+	{
+		return tmpState;
+	}
+
+	tmpState = execMan.copyState(bwdSucc);
+
+	assert(ainfo.iterationToFoldedRoots_.size() == ainfo.faeAtIteration_.size());
+	assert(ainfo.abstrIteration_ > 0);
+	for (int i = (ainfo.abstrIteration_ - 1); i >= 0; --i)
+	{
+		assert(i < ainfo.iterationToFoldedRoots_.size());
+
+		const auto& foldedRoots = (i != 0) ?
+                     ainfo.iterationToFoldedRoots_.at(i) :
+                     ainfo.learn1Boxes_;
+		if (foldedRoots.size() == 0)
+		{
+			// continue;
+		}
+		std::pair<bool, std::shared_ptr<FAE>> reversionRes =
+				revertFolding(foldedRoots, *tmpState->GetFAE(), fwdPred);
+		if (!reversionRes.first && fwdPred.GetFAE()->getRootCount() > reversionRes.second->getRootCount())
+		{
+			// continue;
+		}
+        tmpState->SetFAE(reversionRes.second);
+
+        if (tmpState->GetFAE()->getRootCount() == 0)
+        {
+            return tmpState;
+        }
+
+		assert(tmpState->GetFAE()->getRootCount());
+
+		assert(ainfo.faeAtIteration_.count(i));
+
+		revertAbstraction(tmpState, ainfo.faeAtIteration_.at(i),
+						  &ainfo.normInfoAtIteration_.at(i), true);
+
+        if (tmpState->GetFAE()->Empty())
+		{ // check assertion
+
+			return tmpState;
+		}
+	}
+
+	tmpState->SetFAE(
+			revertFolding(ainfo.learn2Boxes_, *tmpState->GetFAE(), fwdPred).second);
+    tmpState->SetFAE(
+			revertFolding(ainfo.iterationToFoldedRoots_.at(0), *tmpState->GetFAE(), fwdPred).second
+    );
+
+	assert(!tmpState->GetFAE()->Empty());
+	revertAbstraction(tmpState, std::shared_ptr<FAE>(new FAE(*fwdPred.GetFAE())),
+					  &ainfo.reorderNormInfo_, true);
+	std::shared_ptr<FAE> faeMin = std::shared_ptr<FAE>(new FAE(*tmpState->GetFAE()));
+	assert(!tmpState->GetFAE()->Empty());
+	assert(!ainfo.reorderNormInfo_.empty()
+		   || ainfo.faeBeforeReorder_->getRootCount() != tmpState->GetFAE()->getRootCount());
+
+	revertAbstraction(tmpState, ainfo.faeBeforeReorder_, nullptr, true);
 
 	faeMin->minimizeRoots();
 	tmpState->SetFAE(faeMin);
@@ -1021,14 +1106,15 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 {
 
+    auto& ainfo = state.GetAbstractionInfo();
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(state.GetFAE())));
 
 	fae->updateConnectionGraph();
 
 	std::set<size_t> forbidden;
 #if FA_ALLOW_FOLDING
-	Normalization::NormalizationInfo tmp;
-	reorder(&state, *fae, tmp);
+    ainfo.faeBeforeReorder_ = std::shared_ptr<FAE>(new FAE(*fae));
+	reorder(&state, *fae, ainfo.reorderNormInfo_);
 
 	if (!boxMan_.boxDatabase().size())
 	{
@@ -1042,7 +1128,10 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
 
-	Normalization::normalize(*fae, &state, forbidden, true);
+    ainfo.normInfoAtIteration_[0] = Normalization::NormalizationInfo();
+	Normalization::normalize(*fae, &state,
+							 ainfo.normInfoAtIteration_.at(0), forbidden, true);
+    ainfo.faeAtIteration_[0] = std::shared_ptr<FAE>(new FAE(*fae));
 #if FA_ALLOW_FOLDING
 	if (boxMan_.boxDatabase().size())
 	{
@@ -1053,18 +1142,24 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		while (this->fold(fae, forbidden, state.GetAbstractionInfo()))
+		while (this->fold(fae, forbidden, ainfo))
 		{
 			forbidden = Normalization::computeForbiddenSet(*fae);
 
-			Normalization::normalize(*fae, &state, forbidden, true);
-
+            ainfo.normInfoAtIteration_[ainfo.abstrIteration_] =
+                    Normalization::NormalizationInfo();
+			Normalization::normalize(*fae, &state,
+									 ainfo.normInfoAtIteration_.at(ainfo.abstrIteration_),
+									 forbidden, true);
 			forbidden.clear();
 
 			for (size_t i = 0; i < FIXED_REG_COUNT; ++i)
 			{
 				forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 			}
+
+			ainfo.faeAtIteration_[ainfo.abstrIteration_] = std::shared_ptr<FAE>(
+					new FAE(*fae));
 		}
 	}
 #endif
@@ -1080,6 +1175,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 
 		SymState* tmpState = execMan.createChildState(state, next_);
 		tmpState->SetFAE(fae);
+        ainfo.finalFae_ = tmpState->GetFAE();
 
 		execMan.enqueue(tmpState);
 	}

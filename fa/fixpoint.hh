@@ -379,6 +379,11 @@ public:
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "fix   \t";
 	}
+
+    SymState* reverseAndIsect(
+		ExecutionManager&                      execMan,
+		const SymState&                        fwdPred,
+		const SymState&                        bwdSucc) const;
 };
 
 #endif
