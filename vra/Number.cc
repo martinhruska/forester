@@ -25,6 +25,7 @@ using std::string;
 using std::ostream;
 using std::pair;
 using std::swap;
+using std::isnan;
 
 namespace {
 
