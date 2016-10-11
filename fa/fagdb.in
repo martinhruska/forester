@@ -18,8 +18,8 @@ FA_PLUG="$FA_BUILD/libfa.so"
 GCC_HOST='@GCC_HOST@'
 
 # attempt to make
-make -C "$CL_DIR" -s -j5 || exit $?
-make -C "$FA_DIR" -s -j5 || exit $?
+make -C "$CL_DIR" -s -j5 'CMAKE=cmake -D CL_DEBUG=ON' || exit $?
+make -C "$FA_DIR" -s -j5 'CMAKE=cmake -D FA_DEBUG=ON' || exit $?
 
 # initial checks
 find_gcc_host
@@ -30,7 +30,7 @@ test -r "$FA_PLUG"  || die "Forester GCC plug-in not found: ${FA_PLUG}"
 test -z "$GDB" && GDB=gdb
 
 # use verbose level 1 by default
-test -z "$FA_VERBOSE" && FA_VERBOSE=0
+test -z "$FA_VERBOSE" && FA_VERBOSE=1
 
 # use pp code listener by default
 test -z "$FA_OPTS" && FA_OPTS="-fplugin-arg-libfa-dump-pp \
@@ -43,6 +43,7 @@ RUN="LD_PRELOAD=/lib/x86_64-linux-gnu/libpthread.so.0 \
     -dumpbase test.c -quiet -o /dev/null \
     -m32 -O0 -Wall -Wextra \
     -fplugin=$FA_PLUG \
+    -fplugin-arg-libfa-verbose=$FA_VERBOSE \
     $FA_OPTS"
 
 RUN="`printf "%s\n" "$RUN" | tr --squeeze-repeats ' '`"
