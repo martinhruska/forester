@@ -669,10 +669,12 @@ const Box* Folding::makeBox1Component(
 	assert(root < fae_.getRootCount());
 	assert(nullptr != fae_.getRoot(root));
 
+    /*
 	if (!fae_.getRoot(root)->isFinalState(state))
 	{ // TODO PAB
 		return nullptr;
 	}
+     */
 
 	// 'index' maintains for each cutpoint of the FA either '-1' which means that
 	// the box does not reference it, or the order in which it is referenced in
