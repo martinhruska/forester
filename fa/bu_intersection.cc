@@ -16,14 +16,12 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
     {
         if (bwdFAE.getRootCount() == 0)
             break;
-        for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
+        if (i >= bwdFAE.getRootCount() || bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
         {
-            if (i >= bwdFAE.getRootCount() || bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
-            {
-                res.push_back(nullptr);
-                continue;
-            }
+            res.push_back(nullptr);
+            continue;
         }
+
 
         std::shared_ptr<TreeAut> tmp = std::shared_ptr<TreeAut>(new TreeAut());
         bwdFAE.getRoot(i)->minimized(*tmp);
