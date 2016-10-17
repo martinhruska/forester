@@ -1,3 +1,13 @@
+/*
+ * A list containing nodes with integer values 0 and 1.
+ * The list is created such way that nodes are sorted by value.
+ * Then a new node with value 1 is inserted to the list in way that
+ * keeps sorted order of nodes. Finally the invariant the
+ * nodes with value 0 prece the nodes with value 1 is checked.
+ *
+ * Part of Forester benchmark.
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 

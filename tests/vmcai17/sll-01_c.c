@@ -1,3 +1,9 @@
+/*
+ * A list with inner list of length 0 or 1.
+ *
+ * Part of Forester benchmark
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 

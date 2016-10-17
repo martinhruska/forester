@@ -1,3 +1,13 @@
+/*
+ * A list consists of one blue node and nondterministic number of white nodes.
+ * The blue node is inserted to a nondeterministic position in list.
+ *
+ * The invariant claiming that the exactly one blue node is presented
+ * is checked.
+ *
+ * Part of Forester benchmark.
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 

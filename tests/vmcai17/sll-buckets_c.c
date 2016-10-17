@@ -1,3 +1,11 @@
+/*
+ * There are three buckets -- with id 0, 1 and 2.
+ * When a new node is generated a random id from the set {0,1,2}
+ * is assigned to it and it is put to the appropriate bucket.
+ *
+ * Part of Forester benchmark
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 

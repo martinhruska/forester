@@ -1,3 +1,11 @@
+/**
+ *
+ * Red-black list, i.e. a list with coloured nodes (black or red) that satisfies
+ * the condition B . (B + RB)*
+ *
+ * Part of Forester benchmark.
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 
@@ -86,6 +94,8 @@ int main()
 			list = end;
 		}
 	}
+
+	free(null);
 
 	return 0;
 }

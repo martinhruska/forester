@@ -1,3 +1,14 @@
+/*
+ * A list with all nodes white, except two.
+ * One green and red. It holds that the green
+ * one follows the red one. Then the list is
+ * reversed and it is checked whether red one
+ * follows the green one now.
+ *
+ * Part of Forester benchmark.
+ *
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 
