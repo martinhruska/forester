@@ -4,7 +4,6 @@
  * a non decreasing series.
  *
  * Part of Forester benchmark
- *
  */
 
 #include <stdlib.h>

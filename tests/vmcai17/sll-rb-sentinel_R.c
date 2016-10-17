@@ -1,5 +1,4 @@
 /**
- *
  * Red-black list, i.e. a list with coloured nodes (black or red) that satisfies
  * the condition B . (B + RB)*. Null is modelled by a special node.
  *

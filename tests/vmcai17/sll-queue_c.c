@@ -6,7 +6,6 @@
  * the sequence formed by the list corresponds to the value of the auxiliary variable.
  *
  * Part of Forester benchmark
- *
  */
 
 #include <stdlib.h>
