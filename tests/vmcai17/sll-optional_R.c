@@ -1,3 +1,13 @@
+/*
+ * A list with nodes which can point to an optional
+ * external node. Whether an optional node is allocated
+ * or not is determined by integer value -- the value 2
+ * determines allocated external node, 1 or 0 means no
+ * external node.
+ *
+ * Part of Forester benchmark
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 

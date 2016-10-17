@@ -8,7 +8,6 @@
  * Part of Forester benchmark
  *
  */
-   
 
 #include <stdlib.h>
 #include <verifier-builtins.h>

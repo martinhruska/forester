@@ -1,3 +1,12 @@
+/*
+ * A circular list where a head of list is marked
+ * by integer value 0. The rest of list forms
+ * a non decreasing series.
+ *
+ * Part of Forester benchmark
+ *
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 

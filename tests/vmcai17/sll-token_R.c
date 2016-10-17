@@ -1,3 +1,9 @@
+/*
+ * A list ended with node marked by a special integer value.
+ *
+ * Part of Forester benchmark.
+ */
+
 #include <stdlib.h>
 #include <verifier-builtins.h>
 
