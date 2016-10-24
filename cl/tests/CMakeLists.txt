@@ -355,14 +355,14 @@ add_test("headers_sanity-1" gcc -ansi -Wall -Wextra -Werror -pedantic
     -c ${cl_SOURCE_DIR}/../include/cl/code_listener.h)
 
 # headers sanity #2
-add_test("headers_sanity-2" make -j
-    -C ${cl_SOURCE_DIR}/../include/cl
-    -f ${cl_SOURCE_DIR}/Makefile.chk)
+#add_test("headers_sanity-2" make -j
+#    -C ${cl_SOURCE_DIR}/../include/cl
+#    -f ${cl_SOURCE_DIR}/Makefile.chk)
 
 # headers sanity #3
-add_test("headers_sanity-3" make -j
-    -C ${cl_SOURCE_DIR}
-    -f ${cl_SOURCE_DIR}/Makefile.chk)
+#add_test("headers_sanity-3" make -j
+#    -C ${cl_SOURCE_DIR}
+#    -f ${cl_SOURCE_DIR}/Makefile.chk)
 
 if(ENABLE_LLVM)
 # headers sanity #4
