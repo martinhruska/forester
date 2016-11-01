@@ -38,7 +38,12 @@ namespace
 		<key attr.name=\"enterFunction\" attr.type=\"string\" for=\"edge\" id=\"enterFunction\"/>\n\
 		<key attr.name=\"returnFromFunction\" attr.type=\"string\" for=\"edge\" id=\"returnFrom\"/>\n\
 		<graph edgedefault=\"directed\">\n\
-			<data key=\"sourcecodelang\">C</data>\n";
+			<data key=\"sourcecodelang\">C</data>\n\
+			<data key=\"memorymodel\">precise</data>\n\
+			<data key=\"architecture\">32b</data>\n\
+			<data key=\"specification\"><__SPECIFICATION__></data>\n\
+			<data key=\"programhash\"><__PROGRAMHASH__></data>\n\
+			<data key=\"producer\">Forester</data>\n";
 
 
 	const std::string END         = "</graph>\n</graphml>";
@@ -52,6 +57,11 @@ namespace
 	const std::string EDGE_START  = "<edge source=";
 	const std::string EDGE_END    = "</edge>";
 	const std::string EDGE_TARGET = " target=";
+    const std::string WITNESS_TYPE = "<data key=\"witness-type\">";
+	const std::string PROGRAMFILE  = "<data key=\"programfile\">";
+	const std::string CORRECTNESS_WITNESS = "correctness_witness";
+	const std::string VIOLATION_WITNESS  = "violation_witness";
+
 
 
 	bool instrsEq(
@@ -65,9 +75,14 @@ namespace
 
 
 	void printStart(
-			std::ostream&                                  out)
+			std::ostream&        out,
+            const std::string&   filename,
+			const bool           violationWitness=true)
 	{
 		out << START;
+		out << "\t\t\t" << WITNESS_TYPE <<
+			(violationWitness ? VIOLATION_WITNESS : CORRECTNESS_WITNESS) << DATA_END;
+		out  << "\t\t\t" << PROGRAMFILE << filename << DATA_END << "\n";
 	}
 
 
@@ -91,8 +106,7 @@ namespace
 		out << "\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber << "\"" <<
 			EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber+1 << "\">\n";
 
-		out << indent << DATA_START << "\"originfile\">\""<<  filename << "\"" << DATA_END;
-		out << indent << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
+		out << indent << DATA_START << "\"startline\">"<< lineNumber << DATA_END;
 		out << "\t" << EDGE_END << "\n";
 
 	}
@@ -116,9 +130,11 @@ namespace
 
 void SVTraceLite::printTrace(
 			const std::vector<const CodeStorage::Insn*>&   instrs,
-			std::ostream&                                  out)
+			std::ostream&                                  out,
+			const bool                                     violationWitness)
 {
-	printStart(out);
+	const std::string filename = instrs.size() ? instrs.front()->loc.file : "";
+	printStart(out, filename, violationWitness);
 
 	for (size_t i = 0; i < instrs.size(); ++i)
 	{

@@ -35,7 +35,8 @@ public: // public methods
 	 */
 	void printTrace(
 			const std::vector<const CodeStorage::Insn*>&   instrs,
-			std::ostream&                                  out);
+			std::ostream&                                  out,
+    		const bool                                     violationWitness=true);
 };
 
 #endif
