@@ -1,6 +1,10 @@
-#! /usr/bin/python2.7
+#! /usr/bin/python3
 
 import argparse
+import fileinput
+from functools import reduce
+from functools import partial
+import hashlib
 import sys
 import os
 import re
@@ -95,13 +99,23 @@ def getProperties(props, lines):
 def parseProps(formulas):
     return map(lambda x: x.split()[1] if VALID_CALL not in x else VALID_CALL, formulas)
 
+def md5sum(filename):
+    with open(filename, mode='rb') as f:
+        d = hashlib.md5()
+        for buf in iter(partial(f.read, 128), b''):
+            d.update(buf)
+    return d.hexdigest()
+
 def execute(args):
     # Parse properties
     if args[PROPERS_PARAM] == None:
         args[PROPERS_PARAM] = getPropertyFile(args[FILE_PARAM])
     reg = re.compile(PROP_REGEXP)
+    specification = ""
     with open(args[PROPERS_PARAM], 'r') as f:
-        props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in filter(lambda x: x is not None, [reg.match(y) for y in  f.readlines()]) ]
+        lines = f.readlines()
+        specification = ''.join(lines)
+        props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in filter(lambda x: x is not None, [reg.match(y) for y in lines]) ]
     inits = [x[0] for x in props]
     formulas = [x[1] for x in props]
     # execute Forester
@@ -112,31 +126,37 @@ def execute(args):
 
     res=0
     with p.stderr as f:
-        lines = f.readlines()
+        lines = [l.decode() for l in f.readlines()]
         okf = lambda acc,x : acc or "The program is SAFE." in x
         ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x or "internal compiler error" in x
         spuriousf = lambda acc,x : acc or SPURIOUS in x
         prop = getProperty(parseProps(formulas), lines)
         if reduce(okf, lines, False) and not prop == VALID_MEMTRACK:
-            print "TRUE"
+            print("TRUE")
         elif reduce(ff, lines, False) or propersHold(parseProps(formulas), lines) or reduce(spuriousf, lines, False):
             res=2
-            print "UNKNOWN"
+            print("UNKNOWN")
         else:
             res=1
             if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
-                print "FALSE"
+                print("FALSE")
             else:
                 if VALID_MEMTRACK in getProperties(parseProps(formulas), lines):
-                    print "FALSE("+VALID_MEMTRACK+")"
+                    print("FALSE("+VALID_MEMTRACK+")")
                 else:
-                    print "FALSE("+prop+")"
+                    print("FALSE("+prop+")")
+
+    md5hash = md5sum(args[FILE_PARAM])
+    with fileinput.FileInput(args[TRACE_PARAM], inplace=True, backup='.bak') as tracefile:
+        for line in tracefile:
+            print(line.replace('<__SPECIFICATION__>', specification.rstrip('\n')).replace('<__PROGRAMHASH__>', md5hash), end='')
+
     if args[TIME_PARAM]:
-        print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
+        print(resource.getrusage(resource.RUSAGE_CHILDREN)[0])
     return res
 
 def run():
     args = parseParams(sys.argv[1:])
-    assert (args.has_key(TRACE_PARAM) and args.has_key(FILE_PARAM))
+    assert (TRACE_PARAM in args and FILE_PARAM in args)
     execute(args)
 run()
