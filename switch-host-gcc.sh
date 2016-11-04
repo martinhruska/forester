@@ -80,7 +80,4 @@ build_analyzer() {
     $MAKE -C $1 check CTEST='ctest -j9'
 }
 
-build_analyzer fwnull fwnull
-build_analyzer sl Predator
 build_analyzer fa Forester
-build_analyzer vra "Value-Range Analyzer"
