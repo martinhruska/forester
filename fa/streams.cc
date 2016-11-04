@@ -98,7 +98,7 @@ namespace
 			return EXIT_FAILURE;
 		}
 
-		size_t len = strlen(str);
+		size_t len = (str != nullptr) ? strlen(str) : 0;
 
 		if (fwrite(str, 1, len, file) != len)
 		{
