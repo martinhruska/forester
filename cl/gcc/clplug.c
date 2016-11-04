@@ -23,6 +23,16 @@
 #include <gcc-plugin.h>
 #include <plugin-version.h>
 
+#if defined(GCCPLUGIN_VERSION_MAJOR) && (GCCPLUGIN_VERSION_MAJOR >= 6)
+#   define GCC_HOST_6_OR_NEWER
+#endif
+
+#if defined(GCCPLUGIN_VERSION_MAJOR) && (GCCPLUGIN_VERSION_MAJOR >= 5)
+#   define GCC_HOST_5_OR_NEWER
+// GCC_HOST_5_OR_NEWER implies GCC_HOST_4_9_OR_NEWER
+#   define GCC_HOST_4_9_OR_NEWER
+#endif
+
 #if defined(GCCPLUGIN_VERSION_MAJOR) && (GCCPLUGIN_VERSION_MAJOR == 4) && (GCCPLUGIN_VERSION_MINOR >= 9)
 #   define GCC_HOST_4_9_OR_NEWER
 #endif
@@ -39,8 +49,10 @@
 #ifndef __NeXT__
 #   define __NeXT__ 0
 #endif
-#ifndef ENABLE_CHECKING
-#   define ENABLE_CHECKING 0
+#if !defined(GCC_HOST_6_OR_NEWER)       // problem with GCC 6+
+#   ifndef ENABLE_CHECKING
+#       define ENABLE_CHECKING 0
+#   endif
 #endif
 
 #include <coretypes.h>
@@ -51,6 +63,8 @@
 #include <tm.h>
 
 #ifdef GCC_HOST_4_9_OR_NEWER
+    // <tree-core.h> needs to be included before <internal-fn.h> on Fedora 21
+#   include <tree-core.h>
     // required by <gimple.h> when compiling against gcc-4.9.0 plug-in headers
 #   include <alias.h>
 #   include <basic-block.h>
@@ -59,7 +73,6 @@
 #   include <predict.h>
 #   include <print-tree.h>
 #   include <tree.h>
-#   include <tree-core.h>
 #   include <tree-ssa-alias.h>
 #   include <gimple-expr.h> // required by <gimple.h> but requires <tree-core.h>
 #endif
@@ -96,6 +109,12 @@
 
 #ifndef STREQ
 #   define STREQ(s1, s2) (0 == strcmp(s1, s2))
+#endif
+
+#if defined(GCC_HOST_6_OR_NEWER)
+    // work around GCC 6 changes
+#   define gimple gimple*
+    typedef const gimple const_gimple;
 #endif
 
 // our alternative to GGC_CNEW, used prior to gcc 4.6.x
@@ -171,6 +190,12 @@ extern void print_gimple_stmt(FILE *, gimple, int, int);
 // Name of the TYPE_PTR_TO_MEMBER_P has changed in newer versions of GCC.
 #ifndef TYPE_PTRMEM_P
   #define TYPE_PTRMEM_P(NODE) TYPE_PTR_TO_MEMBER_P(NODE)
+#endif
+
+#ifdef GCC_HOST_5_OR_NEWER
+typedef const gswitch *cl_gswitch;
+#else
+typedef gimple cl_gswitch;
 #endif
 
 // name of the plug-in given by gcc during initialization
@@ -486,8 +511,6 @@ static int get_type_sizeof(tree t)
         // C99 stack-allocated arrays of variable size not known at compile-time
         return 0;
 
-    CL_BREAK_IF(TREE_INT_CST_HIGH(size));
-
     return TREE_INT_CST_LOW(size);
 }
 
@@ -552,12 +575,12 @@ static int dig_field_offset(tree t)
 {
     // read byte offset
     tree node = DECL_FIELD_OFFSET(t);
-    CL_BREAK_IF(INTEGER_CST != TREE_CODE(node) || TREE_INT_CST_HIGH(node));
+    CL_BREAK_IF(INTEGER_CST != TREE_CODE(node));
     int offset = TREE_INT_CST_LOW(node) << 3;
 
     // read bit offset
     node = DECL_FIELD_BIT_OFFSET(t);
-    CL_BREAK_IF(INTEGER_CST != TREE_CODE(node) || TREE_INT_CST_HIGH(node));
+    CL_BREAK_IF(INTEGER_CST != TREE_CODE(node));
     offset += TREE_INT_CST_LOW(node);
 
     // return total offset [in bits]
@@ -1139,10 +1162,6 @@ static void read_cst_fnc(struct cl_operand *op, tree t)
 
 static void read_cst_int(struct cl_operand *op, tree t)
 {
-    // I don't understand the following code, see gcc/print-tree.c
-    CL_BREAK_IF(TREE_INT_CST_HIGH(t) != 0 && (TREE_INT_CST_LOW(t) == 0
-                || TREE_INT_CST_HIGH(t) != -1));
-
     // FIXME: should we read unsigned types separately?
     op->code                            = CL_OPERAND_CST;
     op->data.cst.code                   = CL_TYPE_INT;
@@ -1163,7 +1182,11 @@ static void read_cst_real(struct cl_operand *op, tree t)
     } u;
 
     // convert gcc's internal representation of real to build-arch native format
+#if defined(GCC_HOST_6_OR_NEWER)
+    real_to_target(u.l, TREE_REAL_CST_PTR(t), format_helper(&ieee_double_format));
+#else
     real_to_target_fmt(u.l, TREE_REAL_CST_PTR(t), &ieee_double_format);
+#endif
 
     // compile-time switch
     switch (sizeof(long)) {
@@ -1529,33 +1552,58 @@ static void handle_stmt_call_args(gimple stmt)
     }
 }
 
-static void handle_stmt_call(gimple stmt, struct gimple_walk_data *data)
+static bool fnc_from_call_stmt(struct cl_operand *fnc, gimple stmt)
 {
 #ifdef GCC_HOST_4_9_OR_NEWER
     if (gimple_call_internal_p(stmt)) {
         internal_fn code = gimple_call_internal_fn(stmt);
-        CL_WARN_UNHANDLED_WITH_LOC(gimple_location(stmt),
-                "unhandled call to GCC internal function: %s",
-                internal_fn_name(code));
-        emit_abort_once(data, stmt);
-        return;
+
+        // placeholder for built-in fnc type
+        static struct cl_type builtin_fnc_type;
+        builtin_fnc_type.uid = /* FIXME */ -7;
+        builtin_fnc_type.code = CL_TYPE_FNC;
+        builtin_fnc_type.name = "<builtin_fnc_type>";
+
+        // emit built-in fnc as a special case of an external fnc
+        memset(fnc, 0, sizeof *fnc);
+        fnc->type = &builtin_fnc_type;
+        fnc->code = CL_OPERAND_CST;
+        fnc->scope = CL_SCOPE_GLOBAL;
+        fnc->data.cst.code = CL_TYPE_FNC;
+        fnc->data.cst.data.cst_fnc.uid = /* TODO: avoid UID clash */ code;
+        fnc->data.cst.data.cst_fnc.name = internal_fn_name(code);
+        fnc->data.cst.data.cst_fnc.loc.file = "<builtin_fnc>";
+        fnc->data.cst.data.cst_fnc.is_extern = true;
+        return true;
     }
 #endif
-    tree op0 = gimple_call_fn(stmt);
 
+    tree op0 = gimple_call_fn(stmt);
     if (ADDR_EXPR == TREE_CODE(op0))
         // automagic dereference
         op0 = TREE_OPERAND(op0, 0);
 
-    CL_BREAK_IF(NULL_TREE == op0);
+    if (NULL_TREE == op0) {
+        CL_BREAK_IF("failed to resolve callee");
+        return false;
+    }
+
+    handle_operand(fnc, op0);
+    return true;
+}
+
+static void handle_stmt_call(gimple stmt, struct gimple_walk_data *data)
+{
+    // fnc is also operand (call through pointer, struct member, etc.)
+    struct cl_operand fnc;
+    if (!fnc_from_call_stmt(&fnc, stmt)) {
+        emit_abort_once(data, stmt);
+        return;
+    }
 
     // lhs
     struct cl_operand dst;
     handle_operand(&dst, gimple_call_lhs(stmt));
-
-    // fnc is also operand (call through pointer, struct member, etc.)
-    struct cl_operand fnc;
-    handle_operand(&fnc, op0);
 
     // emit CALL insn
     struct cl_loc loc;
@@ -1576,7 +1624,7 @@ static void handle_stmt_call(gimple stmt, struct gimple_walk_data *data)
 static void handle_stmt_return(gimple stmt)
 {
     struct cl_operand src;
-    handle_operand(&src, gimple_return_retval(stmt));
+    handle_operand(&src, gimple_op(stmt, /* return value */ 0));
 
     struct cl_insn cli;
     cli.code                    = CL_INSN_RET;
@@ -1686,7 +1734,7 @@ static unsigned find_case_label_target(gimple stmt, int label_decl_uid)
             continue;
 
         // get label declaration
-        tree label = gimple_label_label(bb_stmt);
+        tree label = gimple_op(bb_stmt, /* label */ 0);
         CL_BREAK_IF(!label);
 
         if (label_decl_uid == LABEL_DECL_UID(label))
@@ -1703,7 +1751,7 @@ static unsigned find_case_label_target(gimple stmt, int label_decl_uid)
 static void handle_stmt_switch(gimple stmt)
 {
     struct cl_operand src;
-    handle_operand(&src, gimple_switch_index(stmt));
+    handle_operand(&src, gimple_op(stmt, /* switch index */ 0));
 
     // emit insn_switch_open
     struct cl_loc loc;
@@ -1712,8 +1760,8 @@ static void handle_stmt_switch(gimple stmt)
     free_cl_operand_data(&src);
 
     unsigned i;
-    for (i = 0; i < gimple_switch_num_labels(stmt); ++i) {
-        tree case_decl = gimple_switch_label(stmt, i);
+    for (i = 0; i < gimple_switch_num_labels((cl_gswitch) stmt); ++i) {
+        tree case_decl = gimple_switch_label((cl_gswitch) stmt, i);
         CL_BREAK_IF(!case_decl);
 
         // lowest case value with same label
@@ -1753,7 +1801,7 @@ static void handle_stmt_switch(gimple stmt)
 
 static void handle_stmt_label(gimple stmt)
 {
-    tree label = gimple_label_label(stmt);
+    tree label = gimple_op(stmt, /* label */ 0);
     struct cl_insn cli;
     cli.code = CL_INSN_LABEL;
     cli.data.insn_label.name = get_decl_name(label);
@@ -2010,7 +2058,9 @@ struct cl_pass_str: public opt_pass {
     cl_pass_str():
         opt_pass(cl_pass_data, 0)
     {
+#ifndef GCC_HOST_5_OR_NEWER
         this->has_execute = true;
+#endif
     }
 
     virtual opt_pass *clone()
@@ -2018,7 +2068,11 @@ struct cl_pass_str: public opt_pass {
         return new cl_pass_str(*this);
     }
 
+#ifdef GCC_HOST_5_OR_NEWER
+    virtual unsigned int execute(function *)
+#else
     virtual unsigned int execute()
+#endif
     {
         return cl_pass_execute();
     }
