@@ -105,7 +105,8 @@ public:
 	static void nontraverseCheckAndRemoveGarbage(
 		FAE&                                fae,
 		const SymState*                     state,
-		const std::vector<bool>&            visited);
+		const std::vector<bool>&            visited,
+		const bool                          silentMode = false);
 };
 
 #endif

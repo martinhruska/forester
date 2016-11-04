@@ -246,7 +246,7 @@ void Normalization::scan(
 	// compute canonical root ordering
 	this->traverse(visited, order, marked);
 
-	GarbageChecker::nontraverseCheckAndRemoveGarbage(this->fae, this->state_, visited);
+	GarbageChecker::nontraverseCheckAndRemoveGarbage(this->fae, this->state_, visited, true);
 
 	if (!extended)
 	{

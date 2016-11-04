@@ -37,6 +37,11 @@ public: // public methods
 			const std::vector<const CodeStorage::Insn*>&   instrs,
 			std::ostream&                                  out,
     		const bool                                     violationWitness=true);
+
+
+    void printCorrectnessTrace(
+			const std::string&   filename,
+			std::ostream&        out);
 };
 
 #endif

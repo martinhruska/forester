@@ -741,6 +741,34 @@ void FI_iadd::execute(ExecutionManager& execMan, SymState& state)
 	execMan.enqueue(tmpState);
 }
 
+// FI_isub
+void FI_isub::execute(ExecutionManager& execMan, SymState& state)
+{
+
+	SymState* tmpState = execMan.createChildStateWithNewRegs(state, next_);
+
+	if (tmpState->GetReg(src1_).isUndef() ||  tmpState->GetReg(src2_).isUndef())
+	{
+		tmpState->SetReg(dstReg_, Data::createUndef());
+	}
+	else
+	{
+		// Assertions
+		assert(state.GetReg(src1_).isInt() && state.GetReg(src2_).isInt());
+		int sum = tmpState->GetReg(src1_).d_int - tmpState->GetReg(src2_).d_int;
+		if (sum != 0)
+		{
+			tmpState->SetReg(dstReg_, Data::createUndef());
+		}
+		else
+		{
+			tmpState->SetReg(dstReg_, Data::createInt(0));
+		}
+	}
+
+	execMan.enqueue(tmpState);
+}
+
 // FI_mul
 void FI_imul::execute(ExecutionManager& execMan, SymState& state)
 {
@@ -785,7 +813,7 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 
 	GarbageChecker::checkAndRemoveGarbage(
 			const_cast<FAE&>(*(faeGarbageLess)), &state, false, state.accessGarbageRoots());
-	if (state.getGarbageRoots().size() > 0)
+	if (state.getGarbageRoots().size() > 1)
 	{
 		faeGarbageLess->removeNulls1();
 	}

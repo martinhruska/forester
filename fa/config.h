@@ -68,7 +68,7 @@
 /**
  * start with predicate abstraction or height abstraction
  */
-#define FA_START_WITH_PREDICATE_ABSTRACTION     1
+#define FA_START_WITH_PREDICATE_ABSTRACTION     0
 
 /**
  * allow to use structures with zero size, e.g. pointers to undefined types

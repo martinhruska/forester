@@ -88,17 +88,18 @@ namespace
 
 	void printEnd(
 			std::ostream&                                  out,
-			int                                            endNode)
+			int                                            endNode,
+            const bool                                     isViolation=true)
 	{
 		out << "\t" << NODE_START << "\"" << NODE_NAME << endNode << "\">\n";
-		out << "\t" << VIOLATION << DATA_END;
+        if (isViolation)
+		    out << "\t" << VIOLATION << DATA_END;
 		out << "\t" << NODE_END << "\n";
 		out << "\t" << END;
 	}
 
 	void printEdge(
 			std::ostream&                                  out,
-			const std::string                              filename,
 			const int                                      lineNumber,
 			const int                                      nodeNumber)
 	{
@@ -147,10 +148,23 @@ void SVTraceLite::printTrace(
 		}
 
 		printNode(out, nodeNumber_);
-		printEdge(out, instr->loc.file, lineNumber, nodeNumber_);
+		printEdge(out, lineNumber, nodeNumber_);
 	
 		++nodeNumber_;
 	}
 	
 	printEnd(out, nodeNumber_);
+}
+
+void SVTraceLite::printCorrectnessTrace(
+		const std::string&   filename,
+		std::ostream&        out)
+{
+	printStart(out, filename, false);
+
+	printNode(out, nodeNumber_);
+	printEdge(out, 1, nodeNumber_);
+	++nodeNumber_;
+
+	printEnd(out, nodeNumber_, false);
 }

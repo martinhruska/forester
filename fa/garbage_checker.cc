@@ -157,10 +157,11 @@ void GarbageChecker::checkAndRemoveGarbage(
 void GarbageChecker::nontraverseCheckAndRemoveGarbage(
 	FAE&                              fae,
 	const SymState*                   state,
-	const std::vector<bool>&          visited)
+	const std::vector<bool>&          visited,
+	const bool                        silentMode)
 {
 	std::unordered_set<size_t> unvisited;
 
-	GarbageChecker::checkGarbage(fae, state, visited, unvisited);
+	GarbageChecker::checkGarbage(fae, state, visited, unvisited, false, silentMode);
 	GarbageChecker::removeGarbage(fae, unvisited);
 }

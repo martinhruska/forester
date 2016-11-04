@@ -259,6 +259,21 @@ protected:
 		}
 	}
 
+	std::streambuf* getTraceStream(std::ofstream& of)
+	{
+		std::streambuf *buf;
+		if (conf_.traceFile.length() > 0)
+		{
+			of.open(conf_.traceFile, std::ofstream::out);
+			buf = of.rdbuf();
+		}
+		else
+		{
+			buf = std::cerr.rdbuf();
+		}
+
+		return buf;
+	}
 
 	void printInstructionInfo(const CodeStorage::Insn *insn, const SymState *state)
 	{
@@ -289,20 +304,8 @@ protected:
 	void printTraceInternal(
 			const std::vector<const CodeStorage::Insn *> trace)
 	{
-		// prepare output
-		std::streambuf *buf;
 		std::ofstream of;
-		if (conf_.traceFile.length() > 0)
-		{
-			of.open(conf_.traceFile, std::ofstream::out);
-			buf = of.rdbuf();
-		}
-		else
-		{
-			buf = std::cerr.rdbuf();
-		}
-
-		std::ostream out(buf);
+		std::ostream out(getTraceStream(of));
 		SVTraceLite svPrinter;
 		svPrinter.printTrace(trace, out);
 
@@ -533,6 +536,27 @@ protected:
 		return shouldRefineAndContinue;
 	}
 
+	void printCorrectnessTraceInternal()
+	{
+        std::ofstream of;
+        std::ostream out(getTraceStream(of));
+        SVTraceLite svPrinter;
+		std::string filename("");
+		for (auto insn : assembly_.code_)
+		{
+			if (insn != nullptr && insn->insn() != nullptr)
+			{
+				filename = insn->insn()->loc.file;
+			}
+		}
+        svPrinter.printCorrectnessTrace(filename, out);
+
+        if (conf_.traceFile.length() > 0)
+        {
+            of.close();
+        }
+	}
+
 		/**
          * @brief  The main execution loop
          *
@@ -601,6 +625,7 @@ protected:
 					repeat = false;
 				}
 #else
+                printCorrectnessTraceInternal();
 				return true; // program is safe
 #endif
 			}
@@ -621,6 +646,10 @@ protected:
 #endif
 				} else
 				{
+                    if (!compiler_.getNumberOfAllocations())
+                    {
+                        throw NotImplementedException("Program without memory allocation");
+                    }
 					throw;
 				}
 			}
