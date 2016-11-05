@@ -99,9 +99,9 @@ def getProperties(props, lines):
 def parseProps(formulas):
     return map(lambda x: x.split()[1] if VALID_CALL not in x else VALID_CALL, formulas)
 
-def md5sum(filename):
+def sha1sum(filename):
     with open(filename, mode='rb') as f:
-        d = hashlib.md5()
+        d = hashlib.sha1()
         for buf in iter(partial(f.read, 128), b''):
             d.update(buf)
     return d.hexdigest()
@@ -147,10 +147,10 @@ def execute(args):
                     print("FALSE("+prop+")")
 
     try:
-        md5hash = md5sum(args[FILE_PARAM])
+        sha1hash = sha1sum(args[FILE_PARAM])
         with fileinput.FileInput(args[TRACE_PARAM], inplace=True) as tracefile:
             for line in tracefile:
-                print(line.replace('<__SPECIFICATION__>', specification.rstrip('\n')).replace('<__PROGRAMHASH__>', md5hash), end='')
+                print(line.replace('<__SPECIFICATION__>', specification.rstrip('\n')).replace('<__PROGRAMHASH__>', sha1hash), end='')
     except FileNotFoundError:
         pass
 
