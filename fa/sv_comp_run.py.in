@@ -146,10 +146,13 @@ def execute(args):
                 else:
                     print("FALSE("+prop+")")
 
-    md5hash = md5sum(args[FILE_PARAM])
-    with fileinput.FileInput(args[TRACE_PARAM], inplace=True, backup='.bak') as tracefile:
-        for line in tracefile:
-            print(line.replace('<__SPECIFICATION__>', specification.rstrip('\n')).replace('<__PROGRAMHASH__>', md5hash), end='')
+    try:
+        md5hash = md5sum(args[FILE_PARAM])
+        with fileinput.FileInput(args[TRACE_PARAM], inplace=True) as tracefile:
+            for line in tracefile:
+                print(line.replace('<__SPECIFICATION__>', specification.rstrip('\n')).replace('<__PROGRAMHASH__>', md5hash), end='')
+    except FileNotFoundError:
+        pass
 
     if args[TIME_PARAM]:
         print(resource.getrusage(resource.RUSAGE_CHILDREN)[0])
