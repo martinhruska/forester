@@ -15,11 +15,14 @@ Instructions for SV-COMP'16
    * Python 3
      - on Ubuntu/Debian provided by a package called 'python3'
 
-1) Forester can be run by the script './sv_comp_run.py'. This scripts assumes
-   an existence of compiled Forester in form of the shared object file 'libfa.so'.
+1) The following files are needed to run Forester:
+   './sv_comp_run.py' ... A script wrapping Forester for SV-COMP needs
+   'libfa.so'         ... Forester compiled to a shared object
 
-2) Use the script './sv_comp_run.py'
-   to run Forester on a test-case:
+   We also provide the 'forester_benchexec_example.xml' file containig
+   an example of defition for Forester execution by the Benchexec framework.
+
+2) Use the script './sv_comp_run.py' to run Forester on a test-case:
 
     Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--time] file
 
