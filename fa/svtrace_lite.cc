@@ -15,28 +15,49 @@ namespace
 
 	// XML initialization
 	const std::string START       = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n\
-	<graphml xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://graphml.graphdrawing.org/xmlns\">\n\
-		<key attr.name=\"lineNumberInOrigin\" attr.type=\"int\" for=\"edge\" id=\"originline\"/>\n\
-		<key attr.name=\"originFileName\" attr.type=\"string\" for=\"edge\" id=\"originfile\">\n\
-			<default>\"&lt;command-line&gt;\"</default>\n\
-		</key>\n\
+		<graphml xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://graphml.graphdrawing.org/xmlns\">\n\
 		<key attr.name=\"nodeType\" attr.type=\"string\" for=\"node\" id=\"nodetype\">\n\
-			<default>path</default>\n\
+		<default>path</default>\n\
+		</key>\n\
+		<key attr.name=\"originFileName\" attr.type=\"string\" for=\"edge\" id=\"originfile\">\n\
+		<default>/scratch/dangl/sv-benchmarks/c/product-lines/minepump_spec1_product33_false-unreach-call.cil.c</default>\n\
 		</key>\n\
 		<key attr.name=\"isFrontierNode\" attr.type=\"boolean\" for=\"node\" id=\"frontier\">\n\
-			<default>false</default>\n\
+		<default>false</default>\n\
 		</key>\n\
 		<key attr.name=\"isViolationNode\" attr.type=\"boolean\" for=\"node\" id=\"violation\">\n\
-			<default>false</default>\n\
+		<default>false</default>\n\
 		</key>\n\
 		<key attr.name=\"isEntryNode\" attr.type=\"boolean\" for=\"node\" id=\"entry\">\n\
-			<default>false</default>\n\
+		<default>false</default>\n\
 		</key>\n\
 		<key attr.name=\"isSinkNode\" attr.type=\"boolean\" for=\"node\" id=\"sink\">\n\
-			<default>false</default>\n\
+		<default>false</default>\n\
 		</key>\n\
+		<key attr.name=\"invariant\" attr.type=\"string\" for=\"node\" id=\"invariant\"/>\n\
+		<key attr.name=\"invariant.scope\" attr.type=\"string\" for=\"node\" id=\"invariant.scope\"/>\n\
+		<key attr.name=\"namedValue\" attr.type=\"string\" for=\"node\" id=\"named\"/>\n\
+		<key attr.name=\"violatedProperty\" attr.type=\"string\" for=\"node\" id=\"violatedProperty\"/>\n\
+		<key attr.name=\"sourcecodeLanguage\" attr.type=\"string\" for=\"graph\" id=\"sourcecodelang\"/>\n\
+		<key attr.name=\"programFile\" attr.type=\"string\" for=\"graph\" id=\"programfile\"/>\n\
+		<key attr.name=\"specification\" attr.type=\"string\" for=\"graph\" id=\"specification\"/>\n\
+		<key attr.name=\"memoryModel\" attr.type=\"string\" for=\"graph\" id=\"memorymodel\"/>\n\
+		<key attr.name=\"architecture\" attr.type=\"string\" for=\"graph\" id=\"architecture\"/>\n\
+		<key attr.name=\"producer\" attr.type=\"string\" for=\"graph\" id=\"producer\"/>\n\
+		<key attr.name=\"sourcecode\" attr.type=\"string\" for=\"edge\" id=\"sourcecode\"/>\n\
+		<key attr.name=\"startline\" attr.type=\"int\" for=\"edge\" id=\"startline\"/>\n\
+		<key attr.name=\"startoffset\" attr.type=\"int\" for=\"edge\" id=\"startoffset\"/>\n\
+		<key attr.name=\"lineColSet\" attr.type=\"string\" for=\"edge\" id=\"lineCols\"/>\n\
+		<key attr.name=\"control\" attr.type=\"string\" for=\"edge\" id=\"control\"/>\n\
+		<key attr.name=\"assumption\" attr.type=\"string\" for=\"edge\" id=\"assumption\"/>\n\
+		<key attr.name=\"assumption.scope\" attr.type=\"string\" for=\"edge\" id=\"assumption.scope\"/>\n\
 		<key attr.name=\"enterFunction\" attr.type=\"string\" for=\"edge\" id=\"enterFunction\"/>\n\
 		<key attr.name=\"returnFromFunction\" attr.type=\"string\" for=\"edge\" id=\"returnFrom\"/>\n\
+		<key attr.name=\"predecessor\" attr.type=\"string\" for=\"edge\" id=\"predecessor\"/>\n\
+		<key attr.name=\"successor\" attr.type=\"string\" for=\"edge\" id=\"successor\"/>\n\
+		<key attr.name=\"graphtype\" attr.type=\"string\" for=\"graph\" id=\"type\"/>\n\
+		<key attr.name=\"programhash\" attr.type=\"string\" for=\"graph\" id=\"programhash\"/>\n\
+		<key attr.name=\"witness-type\" attr.type=\"string\" for=\"graph\" id=\"witness-type\"/>\n\
 		<graph edgedefault=\"directed\">\n\
 			<data key=\"sourcecodelang\">C</data>\n\
 			<data key=\"memorymodel\">precise</data>\n\
