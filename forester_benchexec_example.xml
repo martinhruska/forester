@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE benchmark PUBLIC "+//IDN sosy-lab.org//DTD BenchExec benchmark 1.4//EN" "http://www.sosy-lab.org/benchexec/benchmark-1.4.dtd">
+<benchmark tool="forester" timelimit="900 s">
+
+
+  <resultfiles>**.graphml</resultfiles>
+  
+  <rundefinition name="sv-comp17"></rundefinition>
+
+  <option name="--trace">trace/${inputfile_name}_error-witness.graphml</option>
+
+  <tasks name="HeapReach">
+	  <includesfile>doc/programs/HeapReach.set</includesfile>
+		<propertyfile>${inputfile_path}/../HeapReach.prp</propertyfile>
+  </tasks>
+  <tasks name="HeapMemSafety">
+	  <includesfile>doc/programs/HeapMemSafety.set</includesfile>
+	  <propertyfile>${inputfile_path}/../HeapMemSafety.prp</propertyfile>
+  </tasks>
+
+</benchmark>
