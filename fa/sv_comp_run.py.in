@@ -23,10 +23,15 @@ PROP_REGEXP = 'CHECK\s*\(\s*init\s*\(([^\)]*\))\s*\),\s*LTL\s*\((.*)\s*\)\s*\)'
 INIT_IND = 1
 PROP_IND = 2
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 GCC_HOST='@GCC_HOST@'
-GCC_PLUG='@GCC_PLUG@'
-TOP_DIR=os.path.dirname(os.path.dirname('@GCC_PLUG@'))
-GCC_OPT=os.path.join(TOP_DIR, 'include', "forester-builtins")
+GCC_PLUG='./libfa.so'
+# TOP_DIR=os.path.dirname(os.path.dirname('@libfa.so@'))
+# GCC_OPT=os.path.join(TOP_DIR, 'include', "forester-builtins")
+GCC_OPT=os.path.join('.','include', "forester-builtins")
 
 TIME_REGEXP = '.*clEasyRun\(\)\ took\ ([^s]*)s'
 
