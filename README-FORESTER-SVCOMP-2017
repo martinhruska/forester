@@ -5,13 +5,8 @@ Instructions for SV-COMP'16
 
    * GCC and G++
     - on Ubuntu/Debian provided by packages called 'g++' and 'gcc'.
-    We tested our tool using 'gcc-5.4' for compiling test cases
-	and 'g++-5.4' and the newer for compiling Forester.
-
-   * 32bit system headers, especially in the case of a 64bit OS
-     - on Ubuntu/Debian provided by a package called 'libc6-dev-i386'
-     - you can try to check their presence by
-       'gcc -m32 -o /dev/null /usr/include/stdlib.h'
+    We tested our tool using 'gcc-5' for compiling test cases
+	and 'g++-5' since it is a Ubuntu 16.04 default.
 
    * GCC plugin devel
      - on Ubuntu/Debian provided by a package called 'gcc-X-multilib' 'gcc-X-plugin-dev'
