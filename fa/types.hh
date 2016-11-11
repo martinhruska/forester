@@ -246,6 +246,8 @@ struct Data
 	/// The size of the data
 	int size;
 
+	bool fncCall;
+
 	/// Union with additional information about the data
 	union
 	{
@@ -274,9 +276,11 @@ struct Data
 	 * @param[in]  type  The type of data
 	 */
 	Data(
-		data_type_e        type = data_type_e::t_undef) :
+		data_type_e        type = data_type_e::t_undef,
+		bool               fncCallP = false) :
 		type(type),
-		size(0)
+		size(0),
+		fncCall(fncCallP)
 	{ }
 
 	/**
@@ -289,7 +293,8 @@ struct Data
 	Data(
 		const Data&          data) :
 		type(data.type),
-		size(data.size)
+		size(data.size),
+        fncCall(data.fncCall)
 	{
 		// fill the additional type information according to the type of data
 		switch (data.type)
@@ -338,6 +343,7 @@ struct Data
 		this->clear();
 		this->type = rhs.type;
 		this->size = rhs.size;
+		this->fncCall = rhs.fncCall;
 
 		// fill the additional type information according to the type of data
 		/// @todo: remove duplicit code
@@ -382,7 +388,7 @@ struct Data
 	 *
 	 * @returns  Type and value information for unknown value
 	 */
-	static Data createUnknw() { return Data(data_type_e::t_unknw); }
+	static Data createUnknw(bool fncCall=false) { return Data(data_type_e::t_unknw, fncCall); }
 
 	/**
 	 * @brief  Creates a native memory pointer

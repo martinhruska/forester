@@ -534,10 +534,14 @@ class FI_store : public SequentialInstruction
 	/// Offset from the location pointed by @p src_
 	int offset_;
 
+    const std::set<int>& usedIntCnsts_;
+
 public:
 
-	FI_store(const CodeStorage::Insn* insn, size_t dst, size_t src, int offset)
-		: SequentialInstruction(insn), dst_(dst), src_(src), offset_(offset)
+	FI_store(const CodeStorage::Insn* insn, size_t dst, size_t src, int offset,
+			 const std::set<int>& usedIntCnsts)
+		: SequentialInstruction(insn), dst_(dst), src_(src), offset_(offset),
+		  usedIntCnsts_(usedIntCnsts)
 	{
 		// Assertions
 		assert(src_ != dst_);

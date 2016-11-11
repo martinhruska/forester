@@ -532,20 +532,36 @@ void FI_store::execute(ExecutionManager& execMan, SymState& state)
 
 	SymState* tmpState = execMan.createChildState(state, next_);
 
-	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-
 	const Data& dst = tmpState->GetReg(dst_);
 	const Data& src = tmpState->GetReg(src_);
 
 	Data out;
 
-	VirtualMachine(*fae).nodeModify(
-		dst.d_ref.root, dst.d_ref.displ + offset_, src, out
-	);
+	std::vector<Data> srcData;
+    if (src.isUnknw() && src.fncCall)
+    {
+        for (const int& intConst : usedIntCnsts_)
+        {
+			srcData.push_back(Data::createInt(intConst));
+        }
+	}
+	else
+	{
+		srcData.push_back(src);
+	}
 
-	tmpState->SetFAE(fae);
+	for (const auto& sd : srcData)
+	{
+		tmpState = execMan.createChildState(state, next_);
+		std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+		VirtualMachine(*fae).nodeModify(
+				dst.d_ref.root, dst.d_ref.displ + offset_, sd, out
+		);
 
-	execMan.enqueue(tmpState);
+		tmpState->SetFAE(fae);
+
+		execMan.enqueue(tmpState);
+	}
 }
 
 // FI_loads

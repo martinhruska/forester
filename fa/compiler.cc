@@ -558,6 +558,8 @@ private:
 
 	bool suspiciousCond_;
 
+    std::set<int> intConsts_;
+
 private:  // methods
 
 	Core(const Core&);
@@ -705,6 +707,7 @@ protected:
 			// according to the type of the operand
 			case cl_type_e::CL_TYPE_INT:
 			case cl_type_e::CL_TYPE_ENUM:
+				intConsts_.insert(intCstFromOperand(&op));
 				append(
 					new FI_load_cst(&insn, dst, Data::createInt(intCstFromOperand(&op)))
 				);
@@ -946,7 +949,7 @@ protected:
 				// add an instruction to access a single selector
 				append(new FI_acc_sel(&insn, tmp, offset, boxMan_));
 				// add an instruction to store a single selector
-				append(new FI_store(&insn, tmp, src, offset));
+				append(new FI_store(&insn, tmp, src, offset, intConsts_));
 			}
 
 			// add an instruction to check invariants of the virtual machine
@@ -1343,7 +1346,7 @@ protected:
 						}
 
 						// append store of the value into register
-						append(new FI_store(&insn, tmp, src, offset));
+						append(new FI_store(&insn, tmp, src, offset, intConsts_));
 					}
 
 					// add an instruction to check invariants of the virtual machine
@@ -1442,7 +1445,8 @@ protected:
 						&insn,
 						/* reg with addr of dst */ 1,
 						/* src reg */ 0,
-						/* offset of the dst */ *offs.begin()
+						/* offset of the dst */ *offs.begin(),
+                        intConsts_
 					)))
 		);
 
@@ -2135,7 +2139,7 @@ protected:
 		size_t dstReg = lookupStoreReg(dst, 0);
 
 		// append an instruction to load an unknown constant
-		append(new FI_load_cst(&insn, dstReg, Data::createUnknw()));
+		append(new FI_load_cst(&insn, dstReg, Data::createUnknw(true)));
 
 		cStoreOperand(
 			/* target operand */ dst,
@@ -2733,7 +2737,7 @@ protected:
 							NodeBuilder::buildNode(offs, var.type);
 							for (size_t off : offs)
 							{
-								append(new FI_store(nullptr, 1, 0, off));
+								append(new FI_store(nullptr, 1, 0, off, intConsts_));
 							}
 #if 0
 							if (needsAcc)
@@ -2748,7 +2752,7 @@ protected:
 						{	// in case the operand is anything but a structure
 
 							// store the value in r0 to the memory location pointed by r1
-							append(new FI_store(nullptr, 1, 0, 0));
+							append(new FI_store(nullptr, 1, 0, 0, intConsts_));
 						}
 					}
 
@@ -2811,8 +2815,12 @@ public:
 		builtinTable_{},
 		loopAnalyser_{},
 		allocationCount_(0),
-		suspiciousCond_(false)
-	{ }
+		suspiciousCond_(false),
+		intConsts_()
+	{
+		intConsts_.insert(0);
+		intConsts_.insert(1);
+	}
 
 	size_t getNumberOfAllocations()
 	{
