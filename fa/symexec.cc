@@ -547,7 +547,6 @@ protected:
 			if (insn != nullptr && insn->insn() != nullptr &&
 					insn->insn()->loc.file != nullptr)
 			{
-                std::cerr << "LOC " << insn->insn()->loc << "\n";
 				filename = insn->insn()->loc.file;
 			}
 		}
