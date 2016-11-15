@@ -537,31 +537,32 @@ void FI_store::execute(ExecutionManager& execMan, SymState& state)
 
 	Data out;
 
-	std::vector<Data> srcData;
+	// std::vector<Data> srcData;
     if (src.isUnknw() && src.fncCall)
     {
-        for (const int& intConst : usedIntCnsts_)
-        {
-			srcData.push_back(Data::createInt(intConst));
-        }
+		throw std::runtime_error("CANNOT HANDLE STORING NONDET\n");
+        // for (const int& intConst : usedIntCnsts_)
+        // {
+		// 	srcData.push_back(Data::createInt(intConst));
+        // }
 	}
-	else
-	{
-		srcData.push_back(src);
-	}
+	// else
+	// {
+	//	srcData.push_back(src);
+	// }
 
-	for (const auto& sd : srcData)
-	{
-		tmpState = execMan.createChildState(state, next_);
-		std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-		VirtualMachine(*fae).nodeModify(
-				dst.d_ref.root, dst.d_ref.displ + offset_, sd, out
-		);
+	// for (const auto& sd : srcData)
+	// {
+	tmpState = execMan.createChildState(state, next_);
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+	VirtualMachine(*fae).nodeModify(
+			dst.d_ref.root, dst.d_ref.displ + offset_, src, out
+	);
 
-		tmpState->SetFAE(fae);
+	tmpState->SetFAE(fae);
 
-		execMan.enqueue(tmpState);
-	}
+	execMan.enqueue(tmpState);
+	// }
 }
 
 // FI_loads
