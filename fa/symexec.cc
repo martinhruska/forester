@@ -536,7 +536,8 @@ protected:
 		return shouldRefineAndContinue;
 	}
 
-	void printCorrectnessTraceInternal()
+	template<class T>
+	void printCorrectnessTraceInternal(const T& lineNumberToFixpoint)
 	{
         std::ofstream of;
         std::ostream out(getTraceStream(of));
@@ -550,7 +551,7 @@ protected:
 				filename = insn->insn()->loc.file;
 			}
 		}
-        svPrinter.printCorrectnessTrace(filename, out);
+        svPrinter.printCorrectnessTrace(filename, out, lineNumberToFixpoint);
 
         if (conf_.traceFile.length() > 0)
         {
@@ -626,7 +627,17 @@ protected:
 					repeat = false;
 				}
 #else
-                printCorrectnessTraceInternal();
+				std::map<int, const TreeAut*> lineToFixpoint;
+				for (const AbstractInstruction* insn : assembly_.code_)
+				{
+					if (insn->getType() == fi_type_e::fiFix)
+					{
+						lineToFixpoint[insn->insn()->loc.line] =
+								&(dynamic_cast<const FixpointBase *>(insn))->getFixPoint();
+					}
+				}
+
+				printCorrectnessTraceInternal(lineToFixpoint);
 				return true; // program is safe
 #endif
 			}

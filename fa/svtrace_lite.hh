@@ -4,6 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <fstream>
+#include "treeaut_label.hh"
 
 namespace CodeStorage {
 	struct Insn;
@@ -41,7 +42,8 @@ public: // public methods
 
     void printCorrectnessTrace(
 			const std::string&   filename,
-			std::ostream&        out);
+			std::ostream&        out,
+			const std::map<int, const TreeAut*>& lineToFixpoint);
 };
 
 #endif

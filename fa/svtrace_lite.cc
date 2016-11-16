@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <exception>
 #include <assert.h>
+#include <bits/unordered_map.h>
 
 namespace
 {
@@ -35,6 +36,7 @@ namespace
 		<default>false</default>\n\
 		</key>\n\
 		<key attr.name=\"invariant\" attr.type=\"string\" for=\"node\" id=\"invariant\"/>\n\
+		<key attr.name=\"automaton\" attr.type=\"string\" for=\"node\" id=\"automaton\"/>\n\
 		<key attr.name=\"invariant.scope\" attr.type=\"string\" for=\"node\" id=\"invariant.scope\"/>\n\
 		<key attr.name=\"namedValue\" attr.type=\"string\" for=\"node\" id=\"named\"/>\n\
 		<key attr.name=\"violatedProperty\" attr.type=\"string\" for=\"node\" id=\"violatedProperty\"/>\n\
@@ -74,6 +76,7 @@ namespace
 	const std::string NODE_END    = "</node>";
 	const std::string NODE_ENTRY  = "<data key=\"entry\">true</data>";
 	const std::string NODE_NAME   = "A";
+	const std::string NODE_AUTOMATON  = "<data key=\"automaton\">";
 	const std::string VIOLATION   = "<data key=\"violation\">true";
 	const std::string EDGE_START  = "<edge source=";
 	const std::string EDGE_END    = "</edge>";
@@ -147,6 +150,26 @@ namespace
 			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber << "\"/>\n";
 		}
 	}
+
+	void printNode(
+			std::ostream&                                  out,
+			const int                                      nodeNumber,
+			const TreeAut&                                 invariant)
+	{
+		if (nodeNumber == 1)
+		{
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber << "\">\n\t"
+				<< NODE_ENTRY << "\n\t"
+				<< NODE_AUTOMATON << invariant << DATA_END << "\n\t"
+				<< NODE_END <<"\n";
+		}
+		else
+		{
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber << "\">\n\t"
+				<< NODE_AUTOMATON << invariant << DATA_END << "\n\t"
+				<< NODE_END <<"\n";
+		}
+	}
 }
 
 
@@ -179,13 +202,17 @@ void SVTraceLite::printTrace(
 
 void SVTraceLite::printCorrectnessTrace(
 		const std::string&   filename,
-		std::ostream&        out)
+		std::ostream&        out,
+		const std::map<int, const TreeAut*>& lineToFixpoint)
 {
 	printStart(out, filename, false);
 
-	printNode(out, nodeNumber_);
-	printEdge(out, 1, nodeNumber_);
-	++nodeNumber_;
+	for (const auto& i : lineToFixpoint)
+	{
+		printNode(out, nodeNumber_, *i.second);
+		printEdge(out, i.first, nodeNumber_);
+		++nodeNumber_;
+	}
 
 	printEnd(out, nodeNumber_, false);
 }
