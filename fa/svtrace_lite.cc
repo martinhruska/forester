@@ -21,7 +21,7 @@ namespace
 		<default>path</default>\n\
 		</key>\n\
 		<key attr.name=\"originFileName\" attr.type=\"string\" for=\"edge\" id=\"originfile\">\n\
-		<default>/scratch/dangl/sv-benchmarks/c/product-lines/minepump_spec1_product33_false-unreach-call.cil.c</default>\n\
+		<default>filedefault</default>\n\
 		</key>\n\
 		<key attr.name=\"isFrontierNode\" attr.type=\"boolean\" for=\"node\" id=\"frontier\">\n\
 		<default>false</default>\n\
