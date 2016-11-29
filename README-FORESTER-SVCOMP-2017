@@ -8,6 +8,13 @@ Instructions for SV-COMP'17
     We tested our tool using 'gcc-5' for compiling test cases
 	and 'g++-5' since it is a Ubuntu 16.04 default.
 
+	- the binary version of Forester in 'libfa.so' is compiled against
+	  'gcc-5 (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609'. It is necessary
+	  to have exactly this version of gcc-5 to make the binary work.
+	  Further, we suppose that this version of gcc is located in
+	  the path '/usr/bin/gcc-5'. The location is defined by the variable 'GCC_HOST'
+	  in the 'sv_comp_run.py' script and can be changed if needed.
+
    * GCC plugin devel
      - on Ubuntu/Debian provided by a package called 'gcc-X-multilib' 'gcc-X-plugin-dev'
        where X is version of gcc, e.g. gcc-5-multilib for the gcc version 5.
