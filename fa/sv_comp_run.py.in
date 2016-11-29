@@ -16,6 +16,7 @@ FILE_PARAM = 'file'
 PROPERS_PARAM = 'properties'
 FALSE_PARAM = 'false'
 TIME_PARAM = 'time'
+DEBUG_PARAM = 'debug'
 
 PROP_SUFFIX = '.prp'
 ALL_PRP = 'ALL'+PROP_SUFFIX
@@ -64,9 +65,12 @@ def parseParams(params):
     
     parser.add_argument('--'+FALSE_PARAM, action='store_true',
                        help='Print FALSE when a bug found (this parameter is obsolete, do not use it)')
-    
+
     parser.add_argument('--'+TIME_PARAM, action='store_true',
                        help='Print consumed CPU time')
+
+    parser.add_argument('--'+DEBUG_PARAM, action='store_true',
+                       help='Print debug info')
 
     return vars(parser.parse_args(params))
 
@@ -132,6 +136,9 @@ def execute(args):
     res=0
     with p.stderr as f:
         lines = [l.decode() for l in f.readlines()]
+        if (args[DEBUG_PARAM]):
+                subprocess.call(["gcc-5", "--version"])
+                print(lines)
         okf = lambda acc,x : acc or "The program is SAFE." in x
         ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x or "internal compiler error" in x
         spuriousf = lambda acc,x : acc or SPURIOUS in x
