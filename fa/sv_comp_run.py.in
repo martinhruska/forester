@@ -136,6 +136,10 @@ def execute(args):
     res=0
     with p.stderr as f:
         lines = [l.decode() for l in f.readlines()]
+        if any('Restarting the analysis...' in line for line in lines):
+            indicies = [i for i, elem in enumerate(lines) if "Restarting the analysis" in elem]
+            lines = lines[indicies[-1]:]
+
         if (args[DEBUG_PARAM]):
                 subprocess.call(["gcc-5", "--version"])
                 print(lines)
