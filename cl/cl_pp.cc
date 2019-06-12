@@ -610,6 +610,8 @@ void ClPrettyPrint::printOperandVar(const struct cl_operand *op)
                 if (!ac->next)
                     // already handled
                     break;
+                else
+                    continue;
 
             default:
                 CL_BREAK_IF("printOperandVar() got invalid accessor");
